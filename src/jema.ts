@@ -10,14 +10,16 @@ export default async function requestJemaAccess(
   const gpioAccess = await requestGPIOAccess();
 
   const controlPort = gpioAccess.ports.get(controlGpio);
-  if (!controlPort)
-    throw new Error(`controlPin(${controlGpio}) initialization failed.`);
+  if (!controlPort) {
+    throw new Error(`GPIO(${controlGpio}) initialization failed.`);
+  }
 
   await controlPort.export("out");
 
   const monitorPort = gpioAccess.ports.get(monitorGpio);
-  if (!monitorPort)
-    throw new Error(`monitorPin(${monitorGpio}) initialization failed.`);
+  if (!monitorPort) {
+    throw new Error(`GPIO(${monitorGpio}) initialization failed.`);
+  }
 
   await monitorPort.export("in");
 
@@ -29,9 +31,23 @@ export default async function requestJemaAccess(
       await sleep(CONTROL_INTERVAL);
       await controlPort.write(0);
     },
+
     getMonitor: async () => (await monitorPort.read()) === 1,
+
     setMonitorListener: (listener: (value: boolean) => void) => {
       monitorPort.onchange = ({ value }) => listener(value === 1);
+    },
+
+    close: async () => {
+      for (const port of [controlPort, monitorPort]) {
+        const { portNumber: gpio } = port;
+        try {
+          await port.unexport();
+          console.log(`jema: GPIO(${gpio}) successfully unexported.`);
+        } catch (error) {
+          console.error(`jema: Failed to unexport GPIO(${gpio}):`, error);
+        }
+      }
     },
   };
 }

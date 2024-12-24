@@ -3,9 +3,6 @@ import mqtt from "mqtt";
 import env from "env-var";
 import fs from "fs/promises";
 
-const MESSAGE_ACTIVE = "ACTIVE";
-const MESSAGE_INACTIVE = "INACTIVE";
-
 type Config = {
   deviceId: string;
   entities: Entity[];
@@ -27,6 +24,11 @@ enum TopicType {
   AVAILABILITY = "availability",
 }
 
+enum StatusMessage {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}
+
 function getTopic(device: Entity, type: TopicType): string {
   return `jema-mqtt/${device.uniqueId}/${type}`;
 }
@@ -44,31 +46,35 @@ async function main() {
   );
 
   const getDiscoveryMessage = (entity: Entity): string => {
-    const deviceInfo = {
-      identifiers: [deviceId],
-      name: `jema-mqtt.${deviceId}`,
-      model: "jema-mqtt",
-      manufacturer: "nana4rider",
-    };
-
-    if (entity.component === "lock" || entity.component === "switch") {
-      return JSON.stringify({
+    const createMessage = (obj: Record<string, string>) =>
+      JSON.stringify({
         unique_id: entity.uniqueId,
         name: entity.name,
+        optimistic: false,
+        retain: true,
+        device: {
+          identifiers: [deviceId],
+          name: `jema-mqtt.${deviceId}`,
+          model: "jema-mqtt",
+          manufacturer: "nana4rider",
+        },
+        ...obj,
+      });
+    const { component } = entity;
+
+    if (component === "lock" || component === "switch") {
+      return createMessage({
         command_topic: getTopic(entity, TopicType.COMMAND),
         state_topic: getTopic(entity, TopicType.STATE),
         availability_topic: getTopic(entity, TopicType.AVAILABILITY),
-        payload_lock: MESSAGE_ACTIVE,
-        payload_unlock: MESSAGE_INACTIVE,
-        state_locked: MESSAGE_ACTIVE,
-        state_unlocked: MESSAGE_INACTIVE,
-        optimistic: false,
-        retain: true,
-        device: deviceInfo,
+        payload_lock: StatusMessage.ACTIVE,
+        payload_unlock: StatusMessage.INACTIVE,
+        state_locked: StatusMessage.ACTIVE,
+        state_unlocked: StatusMessage.INACTIVE,
       });
     }
 
-    throw new Error(`unknown type: ${entity.component}`);
+    throw new Error(`unknown component: ${component}`);
   };
 
   const jemas = await Promise.all(
@@ -77,26 +83,19 @@ async function main() {
     ),
   );
 
-  const client = mqtt.connect(env.get("MQTT_BROKER").required().asString(), {
-    username: env.get("MQTT_USERNAME").asString(),
-    password: env.get("MQTT_PASSWORD").asString(),
-  });
+  const client = await mqtt.connectAsync(
+    env.get("MQTT_BROKER").required().asString(),
+    {
+      username: env.get("MQTT_USERNAME").asString(),
+      password: env.get("MQTT_PASSWORD").asString(),
+    },
+  );
 
-  await new Promise<void>((resolve, reject) => {
-    client.on("connect", () => {
-      console.log("mqtt: connected");
-      entities.forEach((entity) => {
-        client.subscribe(getTopic(entity, TopicType.COMMAND), (err) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-        });
-      });
-      resolve();
-    });
-    client.on("error", reject);
-  });
+  console.log("mqtt-client: connected");
+
+  await client.subscribeAsync(
+    entities.map((entity) => getTopic(entity, TopicType.COMMAND)),
+  );
 
   // 受信して状態を変更
   client.on("message", async (topic, payload) => {
@@ -108,21 +107,20 @@ async function main() {
     const message = payload.toString();
     const monitor = await jemas[entityIndex].getMonitor();
     if (
-      (message === MESSAGE_ACTIVE && !monitor) ||
-      (message === MESSAGE_INACTIVE && monitor)
+      (message === StatusMessage.ACTIVE && !monitor) ||
+      (message === StatusMessage.INACTIVE && monitor)
     ) {
       await jemas[entityIndex].sendControl();
     }
   });
 
   entities.map(async (entity, index) => {
-    const publishState = async (value: boolean) => {
-      await client.publishAsync(
+    const publishState = (value: boolean) =>
+      client.publishAsync(
         getTopic(entity, TopicType.STATE),
-        value ? MESSAGE_ACTIVE : MESSAGE_INACTIVE,
+        value ? StatusMessage.ACTIVE : StatusMessage.INACTIVE,
         { retain: true },
       );
-    };
     const jema = jemas[index];
     // 状態の変更を検知して送信
     jema.setMonitorListener(publishState);
@@ -135,32 +133,38 @@ async function main() {
     );
   });
 
-  const publishAvailability = async (value: string) => {
-    await Promise.all(
+  const publishAvailability = (value: string) =>
+    Promise.all(
       entities.map((entity) =>
         client.publishAsync(getTopic(entity, TopicType.AVAILABILITY), value),
       ),
     );
-  };
 
   // オンライン状態を定期的に送信
-  const timerId = setInterval(() => {
-    publishAvailability("online");
-  }, env.get("AVAILABILITY_INTERVAL").default(10000).asIntPositive());
+  const availabilityTimerId = setInterval(
+    () => publishAvailability("online"),
+    env.get("AVAILABILITY_INTERVAL").default(10000).asIntPositive(),
+  );
 
   const shutdownHandler = async () => {
     console.log("jema-mqtt: shutdown");
-    clearInterval(timerId);
+    clearInterval(availabilityTimerId);
     await publishAvailability("offline");
+    await client.endAsync();
+    console.log("mqtt-client: closed");
+    await Promise.all(jemas.map((jema) => jema.close()));
     process.exit(0);
   };
 
-  process.on("SIGINT", shutdownHandler); // Ctrl+C
-  process.on("SIGTERM", shutdownHandler); // kill コマンドやシステム停止
+  process.on("SIGINT", shutdownHandler);
+  process.on("SIGTERM", shutdownHandler);
 
   await publishAvailability("online");
 
   console.log("jema-mqtt: ready");
 }
 
-main();
+main().catch((error) => {
+  console.error("jema-mqtt:", error);
+  process.exit(1);
+});
