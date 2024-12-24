@@ -130,7 +130,7 @@ async function main() {
     await client.publishAsync(
       `${haDiscoveryPrefix}/${entity.component}/${deviceId}/${entity.uniqueId}/config`,
       getDiscoveryMessage(entity),
-      {retain: true}
+      { retain: true },
     );
   });
 
