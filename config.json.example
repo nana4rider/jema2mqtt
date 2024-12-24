@@ -1,0 +1,12 @@
+{
+  "deviceId": "string",
+  "entities": [
+    {
+      "uniqueId": "string",
+      "name": "name",
+      "component": "lock",
+      "controlGpio": 20,
+      "monitorGpio": 21
+    }
+  ]
+}
