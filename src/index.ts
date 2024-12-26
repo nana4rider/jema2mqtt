@@ -51,7 +51,6 @@ async function main() {
         unique_id: entity.uniqueId,
         name: entity.name,
         optimistic: false,
-        retain: true,
         device: {
           identifiers: [deviceId],
           name: `jema2mqtt.${deviceId}`,
