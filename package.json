@@ -1,5 +1,5 @@
 {
-  "name": "jema-mqtt",
+  "name": "jema2mqtt",
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {

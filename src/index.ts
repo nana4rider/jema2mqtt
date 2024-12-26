@@ -30,11 +30,11 @@ enum StatusMessage {
 }
 
 function getTopic(device: Entity, type: TopicType): string {
-  return `jema-mqtt/${device.uniqueId}/${type}`;
+  return `jema2mqtt/${device.uniqueId}/${type}`;
 }
 
 async function main() {
-  console.log("jema-mqtt: start");
+  console.log("jema2mqtt: start");
 
   const haDiscoveryPrefix = env
     .get("HA_DISCOVERY_PREFIX")
@@ -54,8 +54,8 @@ async function main() {
         retain: true,
         device: {
           identifiers: [deviceId],
-          name: `jema-mqtt.${deviceId}`,
-          model: "jema-mqtt",
+          name: `jema2mqtt.${deviceId}`,
+          model: "jema2mqtt",
           manufacturer: "nana4rider",
         },
         ...obj,
@@ -148,7 +148,7 @@ async function main() {
   );
 
   const shutdownHandler = async () => {
-    console.log("jema-mqtt: shutdown");
+    console.log("jema2mqtt: shutdown");
     clearInterval(availabilityTimerId);
     await publishAvailability("offline");
     await client.endAsync();
@@ -162,10 +162,10 @@ async function main() {
 
   await publishAvailability("online");
 
-  console.log("jema-mqtt: ready");
+  console.log("jema2mqtt: ready");
 }
 
 main().catch((error) => {
-  console.error("jema-mqtt:", error);
+  console.error("jema2mqtt:", error);
   process.exit(1);
 });

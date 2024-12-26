@@ -19,10 +19,10 @@ var StatusMessage;
     StatusMessage["INACTIVE"] = "INACTIVE";
 })(StatusMessage || (StatusMessage = {}));
 function getTopic(device, type) {
-    return `jema-mqtt/${device.uniqueId}/${type}`;
+    return `jema2mqtt/${device.uniqueId}/${type}`;
 }
 async function main() {
-    console.log("jema-mqtt: start");
+    console.log("jema2mqtt: start");
     const haDiscoveryPrefix = env_var_1.default
         .get("HA_DISCOVERY_PREFIX")
         .default("homeassistant")
@@ -36,8 +36,8 @@ async function main() {
             retain: true,
             device: {
                 identifiers: [deviceId],
-                name: `jema-mqtt.${deviceId}`,
-                model: "jema-mqtt",
+                name: `jema2mqtt.${deviceId}`,
+                model: "jema2mqtt",
                 manufacturer: "nana4rider",
             },
             ...obj,
@@ -89,7 +89,7 @@ async function main() {
     // オンライン状態を定期的に送信
     const availabilityTimerId = setInterval(() => publishAvailability("online"), env_var_1.default.get("AVAILABILITY_INTERVAL").default(10000).asIntPositive());
     const shutdownHandler = async () => {
-        console.log("jema-mqtt: shutdown");
+        console.log("jema2mqtt: shutdown");
         clearInterval(availabilityTimerId);
         await publishAvailability("offline");
         await client.endAsync();
@@ -100,9 +100,9 @@ async function main() {
     process.on("SIGINT", shutdownHandler);
     process.on("SIGTERM", shutdownHandler);
     await publishAvailability("online");
-    console.log("jema-mqtt: ready");
+    console.log("jema2mqtt: ready");
 }
 main().catch((error) => {
-    console.error("jema-mqtt:", error);
+    console.error("jema2mqtt:", error);
     process.exit(1);
 });

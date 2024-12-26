@@ -1,4 +1,4 @@
-# jema-mqtt
+# jema2mqtt
 
 JEM1427(HA端子、JEM-A端子)をGPIOに接続し、MQTT、Home Assistantで操作するためのアプリケーションです。
 
