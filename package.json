@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
+    "start": "node dist/index",
     "build": "npx tsc",
     "lint": "npx eslint && npx prettier . --check",
     "lint:fix": "npx eslint --fix && npx prettier . --write"
