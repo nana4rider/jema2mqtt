@@ -24,10 +24,12 @@ enum TopicType {
   AVAILABILITY = "availability",
 }
 
-enum StatusMessage {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-}
+const StatusMessage = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+} as const;
+
+type StatusMessage = keyof typeof StatusMessage;
 
 function getTopic(device: Entity, type: TopicType): string {
   return `jema2mqtt/${device.uniqueId}/${type}`;
@@ -41,9 +43,9 @@ async function main() {
     .default("homeassistant")
     .asString();
 
-  const { deviceId, entities }: Config = JSON.parse(
+  const { deviceId, entities } = JSON.parse(
     await fs.readFile("./config.json", "utf-8"),
-  );
+  ) as Config;
 
   const getDiscoveryMessage = (entity: Entity): string => {
     const createMessage = (obj: Record<string, string>) =>
@@ -73,7 +75,7 @@ async function main() {
       });
     }
 
-    throw new Error(`unknown component: ${component}`);
+    throw new Error(`unknown component: ${entity.component}`);
   };
 
   const jemas = await Promise.all(
@@ -97,41 +99,45 @@ async function main() {
   );
 
   // 受信して状態を変更
-  client.on("message", async (topic, payload) => {
-    const entityIndex = entities.findIndex(
-      (entity) => getTopic(entity, TopicType.COMMAND) === topic,
-    );
-    if (entityIndex === -1) return;
+  client.on("message", (topic, payload) => {
+    void (async () => {
+      const entityIndex = entities.findIndex(
+        (entity) => getTopic(entity, TopicType.COMMAND) === topic,
+      );
+      if (entityIndex === -1) return;
 
-    const message = payload.toString();
-    const monitor = await jemas[entityIndex].getMonitor();
-    if (
-      (message === StatusMessage.ACTIVE && !monitor) ||
-      (message === StatusMessage.INACTIVE && monitor)
-    ) {
-      await jemas[entityIndex].sendControl();
-    }
+      const message = payload.toString();
+      const monitor = await jemas[entityIndex].getMonitor();
+      if (
+        (message === StatusMessage.ACTIVE && !monitor) ||
+        (message === StatusMessage.INACTIVE && monitor)
+      ) {
+        await jemas[entityIndex].sendControl();
+      }
+    })();
   });
 
-  entities.map(async (entity, index) => {
-    const publishState = (value: boolean) =>
-      client.publishAsync(
-        getTopic(entity, TopicType.STATE),
-        value ? StatusMessage.ACTIVE : StatusMessage.INACTIVE,
+  await Promise.all(
+    entities.map(async (entity, index) => {
+      const publishState = (value: boolean) =>
+        client.publishAsync(
+          getTopic(entity, TopicType.STATE),
+          value ? StatusMessage.ACTIVE : StatusMessage.INACTIVE,
+          { retain: true },
+        );
+      const jema = jemas[index];
+      // 状態の変更を検知して送信
+      jema.setMonitorListener((value) => void publishState(value));
+      // 起動時に送信
+      await publishState(await jema.getMonitor());
+      // Home Assistantでデバイスを検出
+      await client.publishAsync(
+        `${haDiscoveryPrefix}/${entity.component}/${deviceId}/${entity.uniqueId}/config`,
+        getDiscoveryMessage(entity),
         { retain: true },
       );
-    const jema = jemas[index];
-    // 状態の変更を検知して送信
-    jema.setMonitorListener(publishState);
-    // 起動時に送信
-    await publishState(await jema.getMonitor());
-    // Home Assistantでデバイスを検出
-    await client.publishAsync(
-      `${haDiscoveryPrefix}/${entity.component}/${deviceId}/${entity.uniqueId}/config`,
-      getDiscoveryMessage(entity),
-      { retain: true },
-    );
-  });
+    }),
+  );
 
   const publishAvailability = (value: string) =>
     Promise.all(
@@ -142,7 +148,7 @@ async function main() {
 
   // オンライン状態を定期的に送信
   const availabilityTimerId = setInterval(
-    () => publishAvailability("online"),
+    () => void publishAvailability("online"),
     env.get("AVAILABILITY_INTERVAL").default(10000).asIntPositive(),
   );
 
@@ -156,8 +162,8 @@ async function main() {
     process.exit(0);
   };
 
-  process.on("SIGINT", shutdownHandler);
-  process.on("SIGTERM", shutdownHandler);
+  process.on("SIGINT", () => void shutdownHandler());
+  process.on("SIGTERM", () => void shutdownHandler());
 
   await publishAvailability("online");
 
