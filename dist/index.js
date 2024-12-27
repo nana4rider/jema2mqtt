@@ -53,7 +53,10 @@ async function main() {
         }
         throw new Error(`unknown component: ${entity.component}`);
     };
-    const jemas = await Promise.all(entities.map((entity) => (0, jema_1.default)(entity.controlGpio, entity.monitorGpio)));
+    const jemas = new Map(await Promise.all(entities.map(async ({ uniqueId, controlGpio, monitorGpio }) => {
+        const jema = await (0, jema_1.default)(controlGpio, monitorGpio);
+        return [uniqueId, jema];
+    })));
     const client = await mqtt_1.default.connectAsync(env_var_1.default.get("MQTT_BROKER").required().asString(), {
         username: env_var_1.default.get("MQTT_USERNAME").asString(),
         password: env_var_1.default.get("MQTT_PASSWORD").asString(),
@@ -62,21 +65,22 @@ async function main() {
     await client.subscribeAsync(entities.map((entity) => getTopic(entity, TopicType.COMMAND)));
     // 受信して状態を変更
     const handleMessage = async (topic, message) => {
-        const entityIndex = entities.findIndex((entity) => getTopic(entity, TopicType.COMMAND) === topic);
-        if (entityIndex === -1)
+        const entity = entities.find((entity) => getTopic(entity, TopicType.COMMAND) === topic);
+        if (!entity)
             return;
-        const monitor = await jemas[entityIndex].getMonitor();
+        const jema = jemas.get(entity.uniqueId);
+        const monitor = await jema.getMonitor();
         if ((message === StatusMessage.ACTIVE && !monitor) ||
             (message === StatusMessage.INACTIVE && monitor)) {
-            await jemas[entityIndex].sendControl();
+            await jema.sendControl();
         }
     };
     client.on("message", (topic, payload) => {
         void handleMessage(topic, payload.toString());
     });
-    await Promise.all(entities.map(async (entity, index) => {
+    await Promise.all(entities.map(async (entity) => {
         const publishState = (value) => client.publishAsync(getTopic(entity, TopicType.STATE), value ? StatusMessage.ACTIVE : StatusMessage.INACTIVE, { retain: true });
-        const jema = jemas[index];
+        const jema = jemas.get(entity.uniqueId);
         // 状態の変更を検知して送信
         jema.setMonitorListener((value) => void publishState(value));
         // 起動時に送信
@@ -93,7 +97,7 @@ async function main() {
         await publishAvailability("offline");
         await client.endAsync();
         console.log("mqtt-client: closed");
-        await Promise.all(jemas.map((jema) => jema.close()));
+        await Promise.all(Array.from(jemas.values()));
         process.exit(0);
     };
     process.on("SIGINT", () => void shutdownHandler());

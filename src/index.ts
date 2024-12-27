@@ -78,9 +78,12 @@ async function main() {
     throw new Error(`unknown component: ${entity.component}`);
   };
 
-  const jemas = await Promise.all(
-    entities.map((entity) =>
-      requestJemaAccess(entity.controlGpio, entity.monitorGpio),
+  const jemas = new Map(
+    await Promise.all(
+      entities.map(async ({ uniqueId, controlGpio, monitorGpio }) => {
+        const jema = await requestJemaAccess(controlGpio, monitorGpio);
+        return [uniqueId, jema] as const;
+      }),
     ),
   );
 
@@ -100,17 +103,18 @@ async function main() {
 
   // 受信して状態を変更
   const handleMessage = async (topic: string, message: string) => {
-    const entityIndex = entities.findIndex(
+    const entity = entities.find(
       (entity) => getTopic(entity, TopicType.COMMAND) === topic,
     );
-    if (entityIndex === -1) return;
+    if (!entity) return;
+    const jema = jemas.get(entity.uniqueId)!;
 
-    const monitor = await jemas[entityIndex].getMonitor();
+    const monitor = await jema.getMonitor();
     if (
       (message === StatusMessage.ACTIVE && !monitor) ||
       (message === StatusMessage.INACTIVE && monitor)
     ) {
-      await jemas[entityIndex].sendControl();
+      await jema.sendControl();
     }
   };
   client.on("message", (topic, payload) => {
@@ -118,14 +122,14 @@ async function main() {
   });
 
   await Promise.all(
-    entities.map(async (entity, index) => {
+    entities.map(async (entity) => {
       const publishState = (value: boolean) =>
         client.publishAsync(
           getTopic(entity, TopicType.STATE),
           value ? StatusMessage.ACTIVE : StatusMessage.INACTIVE,
           { retain: true },
         );
-      const jema = jemas[index];
+      const jema = jemas.get(entity.uniqueId)!;
       // 状態の変更を検知して送信
       jema.setMonitorListener((value) => void publishState(value));
       // 起動時に送信
@@ -158,7 +162,7 @@ async function main() {
     await publishAvailability("offline");
     await client.endAsync();
     console.log("mqtt-client: closed");
-    await Promise.all(jemas.map((jema) => jema.close()));
+    await Promise.all(Array.from(jemas.values()));
     process.exit(0);
   };
 
