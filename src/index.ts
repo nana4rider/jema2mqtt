@@ -18,18 +18,18 @@ type Entity = {
 
 type EntityComponent = "lock" | "switch";
 
-enum TopicType {
-  COMMAND = "set",
-  STATE = "state",
-  AVAILABILITY = "availability",
-}
+const TopicType = {
+  COMMAND: "set",
+  STATE: "state",
+  AVAILABILITY: "availability",
+} as const;
+type TopicType = typeof TopicType[keyof typeof TopicType];
 
 const StatusMessage = {
   ACTIVE: "ACTIVE",
   INACTIVE: "INACTIVE",
 } as const;
-
-type StatusMessage = keyof typeof StatusMessage;
+type StatusMessage = typeof StatusMessage[keyof typeof StatusMessage];
 
 function getTopic(device: Entity, type: TopicType): string {
   return `jema2mqtt/${device.uniqueId}/${type}`;

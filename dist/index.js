@@ -7,12 +7,11 @@ const jema_1 = __importDefault(require("./jema"));
 const mqtt_1 = __importDefault(require("mqtt"));
 const env_var_1 = __importDefault(require("env-var"));
 const promises_1 = __importDefault(require("fs/promises"));
-var TopicType;
-(function (TopicType) {
-    TopicType["COMMAND"] = "set";
-    TopicType["STATE"] = "state";
-    TopicType["AVAILABILITY"] = "availability";
-})(TopicType || (TopicType = {}));
+const TopicType = {
+    COMMAND: "set",
+    STATE: "state",
+    AVAILABILITY: "availability",
+};
 const StatusMessage = {
     ACTIVE: "ACTIVE",
     INACTIVE: "INACTIVE",
