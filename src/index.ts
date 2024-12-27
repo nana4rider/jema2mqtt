@@ -23,13 +23,13 @@ const TopicType = {
   STATE: "state",
   AVAILABILITY: "availability",
 } as const;
-type TopicType = typeof TopicType[keyof typeof TopicType];
+type TopicType = (typeof TopicType)[keyof typeof TopicType];
 
 const StatusMessage = {
   ACTIVE: "ACTIVE",
   INACTIVE: "INACTIVE",
 } as const;
-type StatusMessage = typeof StatusMessage[keyof typeof StatusMessage];
+type StatusMessage = (typeof StatusMessage)[keyof typeof StatusMessage];
 
 function getTopic(device: Entity, type: TopicType): string {
   return `jema2mqtt/${device.uniqueId}/${type}`;
@@ -99,22 +99,22 @@ async function main() {
   );
 
   // 受信して状態を変更
-  client.on("message", (topic, payload) => {
-    void (async () => {
-      const entityIndex = entities.findIndex(
-        (entity) => getTopic(entity, TopicType.COMMAND) === topic,
-      );
-      if (entityIndex === -1) return;
+  const handleMessage = async (topic: string, message: string) => {
+    const entityIndex = entities.findIndex(
+      (entity) => getTopic(entity, TopicType.COMMAND) === topic,
+    );
+    if (entityIndex === -1) return;
 
-      const message = payload.toString();
-      const monitor = await jemas[entityIndex].getMonitor();
-      if (
-        (message === StatusMessage.ACTIVE && !monitor) ||
-        (message === StatusMessage.INACTIVE && monitor)
-      ) {
-        await jemas[entityIndex].sendControl();
-      }
-    })();
+    const monitor = await jemas[entityIndex].getMonitor();
+    if (
+      (message === StatusMessage.ACTIVE && !monitor) ||
+      (message === StatusMessage.INACTIVE && monitor)
+    ) {
+      await jemas[entityIndex].sendControl();
+    }
+  };
+  client.on("message", (topic, payload) => {
+    void handleMessage(topic, payload.toString());
   });
 
   await Promise.all(

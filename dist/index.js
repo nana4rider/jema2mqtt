@@ -61,18 +61,18 @@ async function main() {
     console.log("mqtt-client: connected");
     await client.subscribeAsync(entities.map((entity) => getTopic(entity, TopicType.COMMAND)));
     // 受信して状態を変更
+    const handleMessage = async (topic, message) => {
+        const entityIndex = entities.findIndex((entity) => getTopic(entity, TopicType.COMMAND) === topic);
+        if (entityIndex === -1)
+            return;
+        const monitor = await jemas[entityIndex].getMonitor();
+        if ((message === StatusMessage.ACTIVE && !monitor) ||
+            (message === StatusMessage.INACTIVE && monitor)) {
+            await jemas[entityIndex].sendControl();
+        }
+    };
     client.on("message", (topic, payload) => {
-        void (async () => {
-            const entityIndex = entities.findIndex((entity) => getTopic(entity, TopicType.COMMAND) === topic);
-            if (entityIndex === -1)
-                return;
-            const message = payload.toString();
-            const monitor = await jemas[entityIndex].getMonitor();
-            if ((message === StatusMessage.ACTIVE && !monitor) ||
-                (message === StatusMessage.INACTIVE && monitor)) {
-                await jemas[entityIndex].sendControl();
-            }
-        })();
+        void handleMessage(topic, payload.toString());
     });
     await Promise.all(entities.map(async (entity, index) => {
         const publishState = (value) => client.publishAsync(getTopic(entity, TopicType.STATE), value ? StatusMessage.ACTIVE : StatusMessage.INACTIVE, { retain: true });
