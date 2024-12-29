@@ -60,9 +60,9 @@ async function main() {
           manufacturer: "nana4rider",
         },
         origin: {
-          name: 'jema2mqtt',
-          sw_version: '1.0.0',
-          support_url: 'https://github.com/nana4rider/jema2mqtt'
+          name: "jema2mqtt",
+          sw_version: "1.0.0",
+          support_url: "https://github.com/nana4rider/jema2mqtt",
         },
         ...obj,
       });
