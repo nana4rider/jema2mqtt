@@ -141,7 +141,7 @@ async function main() {
       await publishState(await jema.getMonitor());
       // Home Assistantでデバイスを検出
       await client.publishAsync(
-        `${haDiscoveryPrefix}/${entity.component}/${deviceId}/${entity.uniqueId}/config`,
+        `${haDiscoveryPrefix}/${entity.component}/${deviceId}_${entity.uniqueId}/config`,
         getDiscoveryMessage(entity),
         { retain: true },
       );

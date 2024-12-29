@@ -91,7 +91,7 @@ async function main() {
         // 起動時に送信
         await publishState(await jema.getMonitor());
         // Home Assistantでデバイスを検出
-        await client.publishAsync(`${haDiscoveryPrefix}/${entity.component}/${deviceId}/${entity.uniqueId}/config`, getDiscoveryMessage(entity), { retain: true });
+        await client.publishAsync(`${haDiscoveryPrefix}/${entity.component}/${deviceId}_${entity.uniqueId}/config`, getDiscoveryMessage(entity), { retain: true });
     }));
     const publishAvailability = (value) => Promise.all(entities.map((entity) => client.publishAsync(getTopic(entity, TopicType.AVAILABILITY), value)));
     // オンライン状態を定期的に送信
