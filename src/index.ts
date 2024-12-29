@@ -56,7 +56,7 @@ async function main() {
         device: {
           identifiers: [deviceId],
           name: `jema2mqtt.${deviceId}`,
-          model: `control:${entity.controlGpio} monitor:${entity.monitorGpio}`,
+          model: `jema2mqtt`,
           manufacturer: "nana4rider",
         },
         origin: {
