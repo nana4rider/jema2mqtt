@@ -17,7 +17,7 @@ const StatusMessage = {
     INACTIVE: "INACTIVE",
 };
 function getTopic(device, type) {
-    return `jema2mqtt/${device.uniqueId}/${type}`;
+    return `jema2mqtt/${device.id}/${type}`;
 }
 async function main() {
     console.log("jema2mqtt: start");
@@ -27,12 +27,12 @@ async function main() {
         .asString();
     const { deviceId, entities } = JSON.parse(await promises_1.default.readFile("./config.json", "utf-8"));
     const getDiscoveryMessage = (entity) => {
-        const createMessage = (obj) => JSON.stringify({
-            unique_id: entity.uniqueId,
+        const baseMessage = {
+            unique_id: `jema2mqtt_${deviceId}_${entity.id}`,
             name: entity.name,
             optimistic: false,
             device: {
-                identifiers: [deviceId],
+                identifiers: [`jema2mqtt_${deviceId}`],
                 name: `jema2mqtt.${deviceId}`,
                 model: `jema2mqtt`,
                 manufacturer: "nana4rider",
@@ -42,11 +42,11 @@ async function main() {
                 sw_version: "1.0.0",
                 support_url: "https://github.com/nana4rider/jema2mqtt",
             },
-            ...obj,
-        });
+        };
         const { component } = entity;
         if (component === "lock" || component === "switch") {
-            return createMessage({
+            return {
+                ...baseMessage,
                 command_topic: getTopic(entity, TopicType.COMMAND),
                 state_topic: getTopic(entity, TopicType.STATE),
                 availability_topic: getTopic(entity, TopicType.AVAILABILITY),
@@ -54,11 +54,11 @@ async function main() {
                 payload_unlock: StatusMessage.INACTIVE,
                 state_locked: StatusMessage.ACTIVE,
                 state_unlocked: StatusMessage.INACTIVE,
-            });
+            };
         }
         throw new Error(`unknown component: ${entity.component}`);
     };
-    const jemas = new Map(await Promise.all(entities.map(async ({ uniqueId, controlGpio, monitorGpio }) => {
+    const jemas = new Map(await Promise.all(entities.map(async ({ id: uniqueId, controlGpio, monitorGpio }) => {
         const jema = await (0, jema_1.default)(controlGpio, monitorGpio);
         return [uniqueId, jema];
     })));
@@ -73,7 +73,7 @@ async function main() {
         const entity = entities.find((entity) => getTopic(entity, TopicType.COMMAND) === topic);
         if (!entity)
             return;
-        const jema = jemas.get(entity.uniqueId);
+        const jema = jemas.get(entity.id);
         const monitor = await jema.getMonitor();
         if ((message === StatusMessage.ACTIVE && !monitor) ||
             (message === StatusMessage.INACTIVE && monitor)) {
@@ -85,13 +85,14 @@ async function main() {
     });
     await Promise.all(entities.map(async (entity) => {
         const publishState = (value) => client.publishAsync(getTopic(entity, TopicType.STATE), value ? StatusMessage.ACTIVE : StatusMessage.INACTIVE, { retain: true });
-        const jema = jemas.get(entity.uniqueId);
+        const jema = jemas.get(entity.id);
         // 状態の変更を検知して送信
         jema.setMonitorListener((value) => void publishState(value));
         // 起動時に送信
         await publishState(await jema.getMonitor());
         // Home Assistantでデバイスを検出
-        await client.publishAsync(`${haDiscoveryPrefix}/${entity.component}/${deviceId}_${entity.uniqueId}/config`, getDiscoveryMessage(entity), { retain: true });
+        const discoveryMessage = getDiscoveryMessage(entity);
+        await client.publishAsync(`${haDiscoveryPrefix}/${entity.component}/${discoveryMessage.unique_id}/config`, JSON.stringify(discoveryMessage), { retain: true });
     }));
     const publishAvailability = (value) => Promise.all(entities.map((entity) => client.publishAsync(getTopic(entity, TopicType.AVAILABILITY), value)));
     // オンライン状態を定期的に送信

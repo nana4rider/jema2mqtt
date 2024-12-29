@@ -9,7 +9,7 @@ type Config = {
 };
 
 type Entity = {
-  uniqueId: string;
+  id: string;
   name: string;
   component: EntityComponent;
   controlGpio: number;
@@ -32,7 +32,7 @@ const StatusMessage = {
 type StatusMessage = (typeof StatusMessage)[keyof typeof StatusMessage];
 
 function getTopic(device: Entity, type: TopicType): string {
-  return `jema2mqtt/${device.uniqueId}/${type}`;
+  return `jema2mqtt/${device.id}/${type}`;
 }
 
 async function main() {
@@ -47,29 +47,28 @@ async function main() {
     await fs.readFile("./config.json", "utf-8"),
   ) as Config;
 
-  const getDiscoveryMessage = (entity: Entity): string => {
-    const createMessage = (obj: Record<string, string>) =>
-      JSON.stringify({
-        unique_id: entity.uniqueId,
-        name: entity.name,
-        optimistic: false,
-        device: {
-          identifiers: [deviceId],
-          name: `jema2mqtt.${deviceId}`,
-          model: `jema2mqtt`,
-          manufacturer: "nana4rider",
-        },
-        origin: {
-          name: "jema2mqtt",
-          sw_version: "1.0.0",
-          support_url: "https://github.com/nana4rider/jema2mqtt",
-        },
-        ...obj,
-      });
+  const getDiscoveryMessage = (entity: Entity) => {
+    const baseMessage = {
+      unique_id: `jema2mqtt_${deviceId}_${entity.id}`,
+      name: entity.name,
+      optimistic: false,
+      device: {
+        identifiers: [`jema2mqtt_${deviceId}`],
+        name: `jema2mqtt.${deviceId}`,
+        model: `jema2mqtt`,
+        manufacturer: "nana4rider",
+      },
+      origin: {
+        name: "jema2mqtt",
+        sw_version: "1.0.0",
+        support_url: "https://github.com/nana4rider/jema2mqtt",
+      },
+    };
     const { component } = entity;
 
     if (component === "lock" || component === "switch") {
-      return createMessage({
+      return {
+        ...baseMessage,
         command_topic: getTopic(entity, TopicType.COMMAND),
         state_topic: getTopic(entity, TopicType.STATE),
         availability_topic: getTopic(entity, TopicType.AVAILABILITY),
@@ -77,7 +76,7 @@ async function main() {
         payload_unlock: StatusMessage.INACTIVE,
         state_locked: StatusMessage.ACTIVE,
         state_unlocked: StatusMessage.INACTIVE,
-      });
+      };
     }
 
     throw new Error(`unknown component: ${entity.component}`);
@@ -85,7 +84,7 @@ async function main() {
 
   const jemas = new Map(
     await Promise.all(
-      entities.map(async ({ uniqueId, controlGpio, monitorGpio }) => {
+      entities.map(async ({ id: uniqueId, controlGpio, monitorGpio }) => {
         const jema = await requestJemaAccess(controlGpio, monitorGpio);
         return [uniqueId, jema] as const;
       }),
@@ -112,7 +111,7 @@ async function main() {
       (entity) => getTopic(entity, TopicType.COMMAND) === topic,
     );
     if (!entity) return;
-    const jema = jemas.get(entity.uniqueId)!;
+    const jema = jemas.get(entity.id)!;
 
     const monitor = await jema.getMonitor();
     if (
@@ -134,15 +133,16 @@ async function main() {
           value ? StatusMessage.ACTIVE : StatusMessage.INACTIVE,
           { retain: true },
         );
-      const jema = jemas.get(entity.uniqueId)!;
+      const jema = jemas.get(entity.id)!;
       // 状態の変更を検知して送信
       jema.setMonitorListener((value) => void publishState(value));
       // 起動時に送信
       await publishState(await jema.getMonitor());
       // Home Assistantでデバイスを検出
+      const discoveryMessage = getDiscoveryMessage(entity);
       await client.publishAsync(
-        `${haDiscoveryPrefix}/${entity.component}/${deviceId}_${entity.uniqueId}/config`,
-        getDiscoveryMessage(entity),
+        `${haDiscoveryPrefix}/${entity.component}/${discoveryMessage.unique_id}/config`,
+        JSON.stringify(discoveryMessage),
         { retain: true },
       );
     }),
