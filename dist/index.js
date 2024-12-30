@@ -25,6 +25,7 @@ async function main() {
         .get("HA_DISCOVERY_PREFIX")
         .default("homeassistant")
         .asString();
+    const qos = env_var_1.default.get("QOS").default(1).asIntPositive();
     const { deviceId, entities } = JSON.parse(await promises_1.default.readFile("./config.json", "utf-8"));
     const getDiscoveryMessage = (entity) => {
         const baseMessage = {
@@ -54,6 +55,8 @@ async function main() {
                 payload_unlock: StatusMessage.INACTIVE,
                 state_locked: StatusMessage.ACTIVE,
                 state_unlocked: StatusMessage.INACTIVE,
+                qos,
+                retain: true,
             };
         }
         throw new Error(`unknown domain: ${entity.domain}`);

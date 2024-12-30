@@ -43,6 +43,8 @@ async function main() {
     .default("homeassistant")
     .asString();
 
+  const qos = env.get("QOS").default(1).asIntPositive();
+
   const { deviceId, entities } = JSON.parse(
     await fs.readFile("./config.json", "utf-8"),
   ) as Config;
@@ -76,6 +78,8 @@ async function main() {
         payload_unlock: StatusMessage.INACTIVE,
         state_locked: StatusMessage.ACTIVE,
         state_unlocked: StatusMessage.INACTIVE,
+        qos,
+        retain: true,
       };
     }
 
