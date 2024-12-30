@@ -11,12 +11,12 @@ type Config = {
 type Entity = {
   id: string;
   name: string;
-  component: EntityComponent;
+  domain: EntityDomain;
   controlGpio: number;
   monitorGpio: number;
 };
 
-type EntityComponent = "lock" | "switch";
+type EntityDomain = "lock" | "switch";
 
 const TopicType = {
   COMMAND: "set",
@@ -64,9 +64,9 @@ async function main() {
         support_url: "https://github.com/nana4rider/jema2mqtt",
       },
     };
-    const { component } = entity;
+    const { domain } = entity;
 
-    if (component === "lock" || component === "switch") {
+    if (domain === "lock" || domain === "switch") {
       return {
         ...baseMessage,
         command_topic: getTopic(entity, TopicType.COMMAND),
@@ -79,7 +79,7 @@ async function main() {
       };
     }
 
-    throw new Error(`unknown component: ${entity.component}`);
+    throw new Error(`unknown domain: ${entity.domain}`);
   };
 
   const jemas = new Map(
@@ -141,7 +141,7 @@ async function main() {
       // Home Assistantでデバイスを検出
       const discoveryMessage = getDiscoveryMessage(entity);
       await client.publishAsync(
-        `${haDiscoveryPrefix}/${entity.component}/${discoveryMessage.unique_id}/config`,
+        `${haDiscoveryPrefix}/${entity.domain}/${discoveryMessage.unique_id}/config`,
         JSON.stringify(discoveryMessage),
         { retain: true },
       );

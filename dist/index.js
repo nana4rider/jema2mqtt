@@ -43,8 +43,8 @@ async function main() {
                 support_url: "https://github.com/nana4rider/jema2mqtt",
             },
         };
-        const { component } = entity;
-        if (component === "lock" || component === "switch") {
+        const { domain } = entity;
+        if (domain === "lock" || domain === "switch") {
             return {
                 ...baseMessage,
                 command_topic: getTopic(entity, TopicType.COMMAND),
@@ -56,7 +56,7 @@ async function main() {
                 state_unlocked: StatusMessage.INACTIVE,
             };
         }
-        throw new Error(`unknown component: ${entity.component}`);
+        throw new Error(`unknown domain: ${entity.domain}`);
     };
     const jemas = new Map(await Promise.all(entities.map(async ({ id: uniqueId, controlGpio, monitorGpio }) => {
         const jema = await (0, jema_1.default)(controlGpio, monitorGpio);
@@ -92,7 +92,7 @@ async function main() {
         await publishState(await jema.getMonitor());
         // Home Assistantでデバイスを検出
         const discoveryMessage = getDiscoveryMessage(entity);
-        await client.publishAsync(`${haDiscoveryPrefix}/${entity.component}/${discoveryMessage.unique_id}/config`, JSON.stringify(discoveryMessage), { retain: true });
+        await client.publishAsync(`${haDiscoveryPrefix}/${entity.domain}/${discoveryMessage.unique_id}/config`, JSON.stringify(discoveryMessage), { retain: true });
     }));
     const publishAvailability = (value) => Promise.all(entities.map((entity) => client.publishAsync(getTopic(entity, TopicType.AVAILABILITY), value)));
     // オンライン状態を定期的に送信
