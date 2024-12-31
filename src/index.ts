@@ -1,4 +1,5 @@
 import requestJemaAccess from "@/jema";
+import logger from "@/logger";
 import env from "env-var";
 import fs from "fs/promises";
 import mqtt from "mqtt";
@@ -36,7 +37,7 @@ function getTopic(device: Entity, type: TopicType): string {
 }
 
 async function main() {
-  console.log("jema2mqtt: start");
+  logger.info("jema2mqtt: start");
 
   const haDiscoveryPrefix = env
     .get("HA_DISCOVERY_PREFIX")
@@ -103,7 +104,7 @@ async function main() {
     },
   );
 
-  console.log("mqtt-client: connected");
+  logger.info("mqtt-client: connected");
 
   await client.subscribeAsync(
     entities.map((entity) => getTopic(entity, TopicType.COMMAND)),
@@ -166,11 +167,11 @@ async function main() {
   );
 
   const shutdownHandler = async () => {
-    console.log("jema2mqtt: shutdown");
+    logger.info("jema2mqtt: shutdown");
     clearInterval(availabilityTimerId);
     await publishAvailability("offline");
     await client.endAsync();
-    console.log("mqtt-client: closed");
+    logger.info("mqtt-client: closed");
     await Promise.all(Array.from(jemas.values()));
     process.exit(0);
   };
@@ -180,12 +181,12 @@ async function main() {
 
   await publishAvailability("online");
 
-  console.log("jema2mqtt: ready");
+  logger.info("jema2mqtt: ready");
 }
 
 try {
   await main();
 } catch (err) {
-  console.error("jema2mqtt:", err);
+  logger.error("jema2mqtt:", err);
   process.exit(1);
 }
