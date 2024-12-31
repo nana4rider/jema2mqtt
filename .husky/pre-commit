@@ -1,0 +1,9 @@
+npm run lint
+
+npm run build
+
+if ! git diff --cached --name-only | grep -q "dist/index.js"; then
+  echo "Error: Build file 'dist/index.js' is not staged for commit."
+  echo "Please build the project and add the necessary files."
+  exit 1
+fi

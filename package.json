@@ -9,10 +9,7 @@
     "build": "node build.js",
     "lint": "npx eslint && npx prettier . --check",
     "lint:fix": "npx eslint --fix && npx prettier . --write",
-    "prepare": "husky install"
-  },
-  "hooks": {
-    "pre-commit": "npm run lint && npm run build"
+    "prepare": "husky"
   },
   "author": "nana4rider",
   "license": "ISC",
