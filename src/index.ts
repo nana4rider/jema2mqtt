@@ -1,7 +1,7 @@
-import requestJemaAccess from "./jema";
-import mqtt from "mqtt";
+import requestJemaAccess from "@/jema";
 import env from "env-var";
 import fs from "fs/promises";
+import mqtt from "mqtt";
 
 type Config = {
   deviceId: string;
@@ -183,7 +183,9 @@ async function main() {
   console.log("jema2mqtt: ready");
 }
 
-main().catch((error) => {
-  console.error("jema2mqtt:", error);
+try {
+  await main();
+} catch (err) {
+  console.error("jema2mqtt:", err);
   process.exit(1);
-});
+}
