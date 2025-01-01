@@ -1,3 +1,4 @@
+import logger from "@/logger";
 import { requestGPIOAccess } from "node-web-gpio";
 import { setTimeout as sleep } from "timers/promises";
 
@@ -23,19 +24,27 @@ export default async function requestJemaAccess(
 
   await monitorPort.export("in");
 
-  console.log(`jema: initialized`, { controlGpio, monitorGpio });
+  logger.info(`jema: initialized`, { controlGpio, monitorGpio });
 
   return {
     sendControl: async () => {
+      logger.debug("sendControl");
       await controlPort.write(1);
       await sleep(CONTROL_INTERVAL);
       await controlPort.write(0);
     },
 
-    getMonitor: async () => (await monitorPort.read()) === 1,
+    getMonitor: async () => {
+      const value = await monitorPort.read();
+      logger.debug(`getMonitor: ${value}`);
+      return value === 1;
+    },
 
     setMonitorListener: (listener: (value: boolean) => void) => {
-      monitorPort.onchange = ({ value }) => listener(value === 1);
+      monitorPort.onchange = ({ value }) => {
+        logger.debug(`onchange: ${value}`);
+        return listener(value === 1);
+      };
     },
 
     close: async () => {
@@ -43,9 +52,9 @@ export default async function requestJemaAccess(
         const { portNumber: gpio } = port;
         try {
           await port.unexport();
-          console.log(`jema: GPIO(${gpio}) successfully unexported.`);
+          logger.info(`jema: GPIO(${gpio}) successfully unexported.`);
         } catch (error) {
-          console.error(`jema: Failed to unexport GPIO(${gpio}):`, error);
+          logger.error(`jema: Failed to unexport GPIO(${gpio}):`, error);
         }
       }
     },

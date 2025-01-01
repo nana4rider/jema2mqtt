@@ -5,8 +5,8 @@
       "id": "string",
       "name": "name",
       "domain": "lock",
-      "controlGpio": 20,
-      "monitorGpio": 21
+      "controlGpio": 98,
+      "monitorGpio": 99
     }
   ]
 }

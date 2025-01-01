@@ -3,12 +3,13 @@
   "configurations": [
     {
       "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "args": ["run", "dev"],
-      "name": "npm run dev",
-      "cwd": "${workspaceFolder}",
-      "skipFiles": ["<node_internals>/**"]
+      "request": "attach",
+      "name": "Docker Remote Debug",
+      "address": "localhost",
+      "port": 9229,
+      "remoteRoot": "/app",
+      "localRoot": "${workspaceFolder}",
+      "preLaunchTask": "Docker Build and Run"
     }
   ]
 }

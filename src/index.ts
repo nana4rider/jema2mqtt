@@ -107,7 +107,11 @@ async function main() {
   logger.info("mqtt-client: connected");
 
   await client.subscribeAsync(
-    entities.map((entity) => getTopic(entity, TopicType.COMMAND)),
+    entities.map((entity) => {
+      const topic = getTopic(entity, TopicType.COMMAND);
+      logger.debug(`subscribe: ${topic}`);
+      return topic;
+    }),
   );
 
   // 受信して状態を変更
