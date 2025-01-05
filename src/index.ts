@@ -16,6 +16,7 @@ type Config = {
   deviceId: string;
   entities: Entity[];
 };
+
 async function main() {
   logger.info("jema2mqtt: start");
 
