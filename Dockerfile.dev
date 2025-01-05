@@ -9,4 +9,4 @@ RUN sed -i 's/\/sys\/class\/gpio/\/app\/fake_gpio/g' ./node_modules/node-web-gpi
 USER node
 EXPOSE 3000
 
-ENTRYPOINT ["npx", "tsx", "--inspect=0.0.0.0:9230", "--env-file=.env", "src/index"]
+ENTRYPOINT ["npx", "tsx", "--inspect-brk=0.0.0.0:9229", "--env-file=.env", "src/index"]

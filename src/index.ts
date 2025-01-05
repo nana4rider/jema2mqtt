@@ -1,5 +1,13 @@
+import { Entity } from "@/entity";
 import requestJemaAccess from "@/jema";
 import logger from "@/logger";
+import {
+  buildDevice,
+  buildEntity,
+  buildOrigin,
+  StatusMessage,
+} from "@/payload/builder";
+import { getTopic, TopicType } from "@/payload/topic";
 import env from "env-var";
 import fs from "fs/promises";
 import mqtt from "mqtt";
@@ -8,34 +16,6 @@ type Config = {
   deviceId: string;
   entities: Entity[];
 };
-
-type Entity = {
-  id: string;
-  name: string;
-  domain: EntityDomain;
-  controlGpio: number;
-  monitorGpio: number;
-};
-
-type EntityDomain = "lock" | "switch" | "cover";
-
-const TopicType = {
-  COMMAND: "set",
-  STATE: "state",
-  AVAILABILITY: "availability",
-} as const;
-type TopicType = (typeof TopicType)[keyof typeof TopicType];
-
-const StatusMessage = {
-  ACTIVE: "ACTIVE",
-  INACTIVE: "INACTIVE",
-} as const;
-type StatusMessage = (typeof StatusMessage)[keyof typeof StatusMessage];
-
-function getTopic(device: Entity, type: TopicType): string {
-  return `jema2mqtt/${device.id}/${type}`;
-}
-
 async function main() {
   logger.info("jema2mqtt: start");
 
@@ -44,64 +24,9 @@ async function main() {
     .default("homeassistant")
     .asString();
 
-  const qos = env.get("QOS").default(1).asIntPositive();
-
   const { deviceId, entities } = JSON.parse(
     await fs.readFile("./config.json", "utf-8"),
   ) as Config;
-
-  const getDiscoveryMessage = (entity: Entity) => {
-    const baseMessage = {
-      unique_id: `jema2mqtt_${deviceId}_${entity.id}`,
-      name: entity.name,
-      command_topic: getTopic(entity, TopicType.COMMAND),
-      state_topic: getTopic(entity, TopicType.STATE),
-      availability_topic: getTopic(entity, TopicType.AVAILABILITY),
-      optimistic: false,
-      qos,
-      retain: true,
-      device: {
-        identifiers: [`jema2mqtt_${deviceId}`],
-        name: `jema2mqtt.${deviceId}`,
-        model: `jema2mqtt`,
-        manufacturer: "nana4rider",
-      },
-      origin: {
-        name: "jema2mqtt",
-        sw_version: "1.0.0",
-        support_url: "https://github.com/nana4rider/jema2mqtt",
-      },
-    };
-    const { domain } = entity;
-
-    if (domain === "lock") {
-      return {
-        ...baseMessage,
-        payload_lock: StatusMessage.ACTIVE,
-        payload_unlock: StatusMessage.INACTIVE,
-        state_locked: StatusMessage.ACTIVE,
-        state_unlocked: StatusMessage.INACTIVE,
-      };
-    } else if (domain === "switch") {
-      return {
-        ...baseMessage,
-        payload_on: StatusMessage.ACTIVE,
-        payload_off: StatusMessage.INACTIVE,
-        state_on: StatusMessage.ACTIVE,
-        state_off: StatusMessage.INACTIVE,
-      };
-    } else if (domain === "cover") {
-      return {
-        ...baseMessage,
-        payload_close: StatusMessage.ACTIVE,
-        payload_open: StatusMessage.INACTIVE,
-        state_closed: StatusMessage.ACTIVE,
-        state_open: StatusMessage.INACTIVE,
-      };
-    }
-
-    throw new Error(`unknown domain: ${entity.domain}`);
-  };
 
   const jemas = new Map(
     await Promise.all(
@@ -111,6 +36,9 @@ async function main() {
       }),
     ),
   );
+
+  const origin = await buildOrigin();
+  const device = buildDevice(deviceId);
 
   const client = await mqtt.connectAsync(
     env.get("MQTT_BROKER").required().asString(),
@@ -164,7 +92,11 @@ async function main() {
       // 起動時に送信
       await publishState(await jema.getMonitor());
       // Home Assistantでデバイスを検出
-      const discoveryMessage = getDiscoveryMessage(entity);
+      const discoveryMessage = {
+        ...buildEntity(deviceId, entity),
+        ...device,
+        ...origin,
+      };
       await client.publishAsync(
         `${haDiscoveryPrefix}/${entity.domain}/${discoveryMessage.unique_id}/config`,
         JSON.stringify(discoveryMessage),
