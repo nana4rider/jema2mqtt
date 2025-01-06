@@ -125,7 +125,7 @@ async function main() {
     await publishAvailability("offline");
     await client.endAsync();
     logger.info("mqtt-client: closed");
-    await Promise.all(Array.from(jemas.values()));
+    await Promise.all(Array.from(jemas.values()).map((jema) => jema.close()));
     process.exit(0);
   };
 
