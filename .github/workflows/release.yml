@@ -53,7 +53,6 @@ jobs:
         if: always()
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          content: "@everyone"
 
   deploy-webhook:
     runs-on: ubuntu-latest
