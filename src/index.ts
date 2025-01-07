@@ -10,7 +10,9 @@ import {
 import { getTopic, TopicType } from "@/payload/topic";
 import env from "env-var";
 import fs from "fs/promises";
+import http from "http";
 import mqtt from "mqtt";
+import { promisify } from "util";
 
 type Config = {
   deviceId: string;
@@ -18,12 +20,13 @@ type Config = {
 };
 
 async function main() {
-  logger.info("jema2mqtt: start");
+  logger.info("start");
 
   const haDiscoveryPrefix = env
     .get("HA_DISCOVERY_PREFIX")
     .default("homeassistant")
     .asString();
+  const port = env.get("PORT").default(3000).asPortNumber();
 
   const { deviceId, entities } = JSON.parse(
     await fs.readFile("./config.json", "utf-8"),
@@ -49,7 +52,7 @@ async function main() {
     },
   );
 
-  logger.info("mqtt-client: connected");
+  logger.info("[MQTT] connected");
 
   await client.subscribeAsync(
     entities.map((entity) => {
@@ -119,12 +122,27 @@ async function main() {
     env.get("AVAILABILITY_INTERVAL").default(10000).asIntPositive(),
   );
 
+  const server = http.createServer((req, res) => {
+    if (req.url === "/health") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({}));
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  });
+
+  await promisify(server.listen.bind(server, port))();
+  logger.info(`Health check server running on port ${port}`);
+
   const shutdownHandler = async () => {
-    logger.info("jema2mqtt: shutdown");
+    logger.info("shutdown");
+    await promisify(server.close.bind(server))();
+    logger.info("[HTTP] closed");
     clearInterval(availabilityTimerId);
     await publishAvailability("offline");
     await client.endAsync();
-    logger.info("mqtt-client: closed");
+    logger.info("[MQTT] closed");
     await Promise.all(Array.from(jemas.values()).map((jema) => jema.close()));
     process.exit(0);
   };
@@ -134,12 +152,12 @@ async function main() {
 
   await publishAvailability("online");
 
-  logger.info("jema2mqtt: ready");
+  logger.info("ready");
 }
 
 try {
   await main();
 } catch (err) {
-  logger.error("jema2mqtt:", err);
+  logger.error("main() error:", err);
   process.exit(1);
 }

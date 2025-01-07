@@ -24,11 +24,11 @@ export default async function requestJemaAccess(
 
   await monitorPort.export("in");
 
-  logger.info(`jema: initialized`, { controlGpio, monitorGpio });
+  logger.info(`[JEMA] initialized`, { controlGpio, monitorGpio });
 
   return {
     sendControl: async () => {
-      logger.debug("sendControl");
+      logger.debug("[JEMA] sendControl");
       await controlPort.write(1);
       await sleep(CONTROL_INTERVAL);
       await controlPort.write(0);
@@ -36,13 +36,13 @@ export default async function requestJemaAccess(
 
     getMonitor: async () => {
       const value = await monitorPort.read();
-      logger.debug(`getMonitor: ${value}`);
+      logger.debug(`[JEMA] getMonitor: ${value}`);
       return value === 1;
     },
 
     setMonitorListener: (listener: (value: boolean) => void) => {
       monitorPort.onchange = ({ value }) => {
-        logger.debug(`onchange: ${value}`);
+        logger.debug(`[JEMA] onchange: ${value}`);
         return listener(value === 1);
       };
     },
@@ -52,9 +52,9 @@ export default async function requestJemaAccess(
         const { portNumber: gpio } = port;
         try {
           await port.unexport();
-          logger.info(`jema: GPIO(${gpio}) successfully unexported.`);
+          logger.info(`[JEMA] GPIO(${gpio}) successfully unexported.`);
         } catch (error) {
-          logger.error(`jema: Failed to unexport GPIO(${gpio}):`, error);
+          logger.error(`[JEMA] Failed to unexport GPIO(${gpio}):`, error);
         }
       }
     },
