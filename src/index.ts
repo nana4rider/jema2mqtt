@@ -19,14 +19,21 @@ type Config = {
   entities: Entity[];
 };
 
+const HA_DISCOVERY_PREFIX = env
+  .get("HA_DISCOVERY_PREFIX")
+  .default("homeassistant")
+  .asString();
+const PORT = env.get("PORT").default(3000).asPortNumber();
+const MQTT_BROKER = env.get("MQTT_BROKER").required().asString();
+const MQTT_USERNAME = env.get("MQTT_USERNAME").asString();
+const MQTT_PASSWORD = env.get("MQTT_PASSWORD").asString();
+const AVAILABILITY_INTERVAL = env
+  .get("AVAILABILITY_INTERVAL")
+  .default(10000)
+  .asIntPositive();
+
 async function main() {
   logger.info("start");
-
-  const haDiscoveryPrefix = env
-    .get("HA_DISCOVERY_PREFIX")
-    .default("homeassistant")
-    .asString();
-  const port = env.get("PORT").default(3000).asPortNumber();
 
   const { deviceId, entities } = JSON.parse(
     await fs.readFile("./config.json", "utf-8"),
@@ -44,13 +51,10 @@ async function main() {
   const origin = await buildOrigin();
   const device = buildDevice(deviceId);
 
-  const client = await mqtt.connectAsync(
-    env.get("MQTT_BROKER").required().asString(),
-    {
-      username: env.get("MQTT_USERNAME").asString(),
-      password: env.get("MQTT_PASSWORD").asString(),
-    },
-  );
+  const client = await mqtt.connectAsync(MQTT_BROKER, {
+    username: MQTT_USERNAME,
+    password: MQTT_PASSWORD,
+  });
 
   logger.info("[MQTT] connected");
 
@@ -102,7 +106,7 @@ async function main() {
         ...origin,
       };
       await client.publishAsync(
-        `${haDiscoveryPrefix}/${entity.domain}/${discoveryMessage.unique_id}/config`,
+        `${HA_DISCOVERY_PREFIX}/${entity.domain}/${discoveryMessage.unique_id}/config`,
         JSON.stringify(discoveryMessage),
         { retain: true },
       );
@@ -119,7 +123,7 @@ async function main() {
   // オンライン状態を定期的に送信
   const availabilityTimerId = setInterval(
     () => void publishAvailability("online"),
-    env.get("AVAILABILITY_INTERVAL").default(10000).asIntPositive(),
+    AVAILABILITY_INTERVAL,
   );
 
   const server = http.createServer((req, res) => {
@@ -132,8 +136,8 @@ async function main() {
     }
   });
 
-  await promisify(server.listen.bind(server, port))();
-  logger.info(`Health check server running on port ${port}`);
+  await promisify(server.listen.bind(server, PORT))();
+  logger.info(`Health check server running on port ${PORT}`);
 
   const shutdownHandler = async () => {
     logger.info("shutdown");

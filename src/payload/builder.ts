@@ -12,7 +12,7 @@ export const StatusMessage = {
 } as const;
 type StatusMessage = (typeof StatusMessage)[keyof typeof StatusMessage];
 
-const qos = env.get("QOS").default(1).asIntPositive();
+const QOS = env.get("QOS").default(1).asIntPositive();
 
 export function buildEntity(deviceId: string, entity: Entity) {
   const baseMessage = {
@@ -22,7 +22,7 @@ export function buildEntity(deviceId: string, entity: Entity) {
     state_topic: getTopic(entity, TopicType.STATE),
     availability_topic: getTopic(entity, TopicType.AVAILABILITY),
     optimistic: false,
-    qos,
+    qos: QOS,
     retain: true,
   };
 
