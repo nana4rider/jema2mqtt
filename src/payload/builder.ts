@@ -23,7 +23,7 @@ export function buildEntity(deviceId: string, entity: Entity) {
     availability_topic: getTopic(entity, TopicType.AVAILABILITY),
     optimistic: false,
     qos: QOS,
-    retain: true,
+    retain: false,
   };
 
   const { domain } = entity;

@@ -37,7 +37,7 @@ describe("buildEntity", () => {
     expect(entity).toHaveProperty("state_unlocked", StatusMessage.INACTIVE);
     expect(entity).toHaveProperty("optimistic", false);
     expect(entity).toHaveProperty("qos");
-    expect(entity).toHaveProperty("retain", true);
+    expect(entity).toHaveProperty("retain", false);
   });
 
   test("switchに必要な属性が揃っている", () => {
@@ -69,7 +69,7 @@ describe("buildEntity", () => {
     expect(entity).toHaveProperty("state_off", StatusMessage.INACTIVE);
     expect(entity).toHaveProperty("optimistic", false);
     expect(entity).toHaveProperty("qos");
-    expect(entity).toHaveProperty("retain", true);
+    expect(entity).toHaveProperty("retain", false);
   });
 
   test("coverに必要な属性が揃っている", () => {
@@ -101,7 +101,7 @@ describe("buildEntity", () => {
     expect(entity).toHaveProperty("state_open", StatusMessage.INACTIVE);
     expect(entity).toHaveProperty("optimistic", false);
     expect(entity).toHaveProperty("qos");
-    expect(entity).toHaveProperty("retain", true);
+    expect(entity).toHaveProperty("retain", false);
   });
 
   test("不明なドメイン", () => {
