@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe("initialize", () => {
   test("制御信号GPIO、モニタ信号GPIOの初期化が正常終了", async () => {
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     await requestJemaAccess(controlGpio, monitorGpio);
 
     expect(mockControlExport).toHaveBeenCalledWith("out");
@@ -55,14 +55,14 @@ describe("initialize", () => {
   });
 
   test("制御信号GPIOの初期化に失敗", async () => {
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     const actual = requestJemaAccess(99, monitorGpio);
 
     await expect(actual).rejects.toThrow("GPIO(99) initialization failed.");
   });
 
   test("モニタ信号GPIOの初期化に失敗", async () => {
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     const actual = requestJemaAccess(controlGpio, 98);
 
     await expect(actual).rejects.toThrow("GPIO(98) initialization failed.");
@@ -71,7 +71,7 @@ describe("initialize", () => {
 
 describe("sendControl", () => {
   test("制御信号に1を送信した後0を送信", async () => {
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     const { sendControl } = await requestJemaAccess(controlGpio, monitorGpio);
     await sendControl();
 
@@ -85,7 +85,7 @@ describe("getMonitor", () => {
   test("モニタ信号の値が1のときはtrueを返す", async () => {
     mockMonitorRead.mockReturnValueOnce(1);
 
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     const { getMonitor } = await requestJemaAccess(controlGpio, monitorGpio);
 
     await expect(getMonitor()).resolves.toBe(true);
@@ -94,7 +94,7 @@ describe("getMonitor", () => {
   test("モニタ信号の値が0のときはfalseを返す", async () => {
     mockMonitorRead.mockReturnValueOnce(0);
 
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     const { getMonitor } = await requestJemaAccess(controlGpio, monitorGpio);
 
     await expect(getMonitor()).resolves.toBe(false);
@@ -103,7 +103,7 @@ describe("getMonitor", () => {
 
 describe("setMonitorListener", () => {
   test("イベントが発火される", async () => {
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     const { setMonitorListener } = await requestJemaAccess(
       controlGpio,
       monitorGpio,
@@ -120,7 +120,7 @@ describe("setMonitorListener", () => {
 
 describe("close", () => {
   test("制御信号、モニタ信号のunexportが呼び出される", async () => {
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     const { close } = await requestJemaAccess(controlGpio, monitorGpio);
     await close();
     expect(mockControlUnexport).toHaveBeenCalledTimes(1);
@@ -131,7 +131,7 @@ describe("close", () => {
     mockControlUnexport.mockImplementation(() => {
       throw new Error("unexport error");
     });
-    const { default: requestJemaAccess } = await import("@/jema");
+    const { default: requestJemaAccess } = await import("@/service/jema");
     const { close } = await requestJemaAccess(controlGpio, monitorGpio);
     const actual = close();
     await expect(actual).resolves.not.toThrow();
