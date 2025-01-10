@@ -2,12 +2,19 @@ import logger from "@/logger";
 import { requestGPIOAccess } from "node-web-gpio";
 import { setTimeout as sleep } from "timers/promises";
 
+export type JemaAccess = {
+  sendControl: () => Promise<void>;
+  getMonitor: () => Promise<boolean>;
+  setMonitorListener: (listener: (value: boolean) => void) => void;
+  close: () => Promise<void>;
+};
+
 const CONTROL_INTERVAL = 250;
 
 export default async function requestJemaAccess(
   controlGpio: number,
   monitorGpio: number,
-) {
+): Promise<JemaAccess> {
   const gpioAccess = await requestGPIOAccess();
 
   const controlPort = gpioAccess.ports.get(controlGpio);
