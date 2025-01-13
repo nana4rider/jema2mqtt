@@ -1,4 +1,5 @@
 import { Entity } from "@/entity";
+import env from "@/env";
 import {
   buildDevice,
   buildEntity,
@@ -8,12 +9,6 @@ import {
 import { getTopic, TopicType } from "@/payload/topic";
 import { JemaAccess } from "@/service/jema";
 import initializeMqttClient from "@/service/mqtt";
-import env from "env-var";
-
-const HA_DISCOVERY_PREFIX = env
-  .get("HA_DISCOVERY_PREFIX")
-  .default("homeassistant")
-  .asString();
 
 export default async function setupMqttDeviceManager(
   deviceId: string,
@@ -67,7 +62,7 @@ export default async function setupMqttDeviceManager(
         ...origin,
       };
       mqtt.publish(
-        `${HA_DISCOVERY_PREFIX}/${entity.domain}/${discoveryMessage.unique_id}/config`,
+        `${env.HA_DISCOVERY_PREFIX}/${entity.domain}/${discoveryMessage.unique_id}/config`,
         JSON.stringify(discoveryMessage),
         { qos: 1, retain: true },
       );
