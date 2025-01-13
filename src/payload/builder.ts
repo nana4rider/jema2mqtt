@@ -12,7 +12,10 @@ export const StatusMessage = {
 } as const;
 type StatusMessage = (typeof StatusMessage)[keyof typeof StatusMessage];
 
-export function buildEntity(deviceId: string, entity: Entity) {
+export function buildEntity(
+  deviceId: string,
+  entity: Entity,
+): Readonly<Payload & { unique_id: string }> {
   const baseMessage = {
     unique_id: `jema2mqtt_${deviceId}_${entity.id}`,
     name: entity.name,
