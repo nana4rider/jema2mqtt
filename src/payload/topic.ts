@@ -7,6 +7,10 @@ export const TopicType = {
 } as const;
 type TopicType = (typeof TopicType)[keyof typeof TopicType];
 
-export function getTopic(entity: Entity, type: TopicType): string {
-  return `jema2mqtt/${entity.id}/${type}`;
+export function getTopic(
+  deviceId: string,
+  entity: Entity,
+  type: TopicType,
+): string {
+  return `jema2mqtt/${deviceId}/${entity.id}/${type}`;
 }

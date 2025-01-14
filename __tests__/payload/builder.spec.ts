@@ -21,15 +21,15 @@ describe("buildEntity", () => {
     expect(entity).toHaveProperty("name", "Test Entity");
     expect(entity).toHaveProperty(
       "command_topic",
-      `jema2mqtt/entity1/${TopicType.COMMAND}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.COMMAND}`,
     );
     expect(entity).toHaveProperty(
       "state_topic",
-      `jema2mqtt/entity1/${TopicType.STATE}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.STATE}`,
     );
     expect(entity).toHaveProperty(
       "availability_topic",
-      `jema2mqtt/entity1/${TopicType.AVAILABILITY}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.AVAILABILITY}`,
     );
     expect(entity).toHaveProperty("payload_lock", StatusMessage.ACTIVE);
     expect(entity).toHaveProperty("payload_unlock", StatusMessage.INACTIVE);
@@ -53,15 +53,15 @@ describe("buildEntity", () => {
     expect(entity).toHaveProperty("name", "Test Entity");
     expect(entity).toHaveProperty(
       "command_topic",
-      `jema2mqtt/entity1/${TopicType.COMMAND}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.COMMAND}`,
     );
     expect(entity).toHaveProperty(
       "state_topic",
-      `jema2mqtt/entity1/${TopicType.STATE}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.STATE}`,
     );
     expect(entity).toHaveProperty(
       "availability_topic",
-      `jema2mqtt/entity1/${TopicType.AVAILABILITY}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.AVAILABILITY}`,
     );
     expect(entity).toHaveProperty("payload_on", StatusMessage.ACTIVE);
     expect(entity).toHaveProperty("payload_off", StatusMessage.INACTIVE);
@@ -85,15 +85,15 @@ describe("buildEntity", () => {
     expect(entity).toHaveProperty("name", "Test Entity");
     expect(entity).toHaveProperty(
       "command_topic",
-      `jema2mqtt/entity1/${TopicType.COMMAND}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.COMMAND}`,
     );
     expect(entity).toHaveProperty(
       "state_topic",
-      `jema2mqtt/entity1/${TopicType.STATE}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.STATE}`,
     );
     expect(entity).toHaveProperty(
       "availability_topic",
-      `jema2mqtt/entity1/${TopicType.AVAILABILITY}`,
+      `jema2mqtt/deviceId1/entity1/${TopicType.AVAILABILITY}`,
     );
     expect(entity).toHaveProperty("payload_close", StatusMessage.ACTIVE);
     expect(entity).toHaveProperty("payload_open", StatusMessage.INACTIVE);

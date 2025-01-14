@@ -90,7 +90,10 @@ describe("setupMqttDeviceManager", () => {
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
     expect(mockInitializeMqttClient).toHaveBeenCalledWith(
-      ["jema2mqtt/entity1/set", "jema2mqtt/entity2/set"],
+      [
+        "jema2mqtt/test-device-id/entity1/set",
+        "jema2mqtt/test-device-id/entity2/set",
+      ],
       expect.any(Function),
     );
   });
@@ -114,7 +117,10 @@ describe("setupMqttDeviceManager", () => {
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
     const handleMessage = mockInitializeMqttClient.mock.calls[0][1];
-    await handleMessage("jema2mqtt/entity1/set", StatusMessage.ACTIVE);
+    await handleMessage(
+      "jema2mqtt/test-device-id/entity1/set",
+      StatusMessage.ACTIVE,
+    );
 
     expect(mockSendControl).toHaveBeenCalledTimes(1);
   });
@@ -138,7 +144,10 @@ describe("setupMqttDeviceManager", () => {
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
     const handleMessage = mockInitializeMqttClient.mock.calls[0][1];
-    await handleMessage("jema2mqtt/entity1/set", StatusMessage.INACTIVE);
+    await handleMessage(
+      "jema2mqtt/test-device-id/entity1/set",
+      StatusMessage.INACTIVE,
+    );
 
     expect(mockSendControl).toHaveBeenCalledTimes(1);
   });
@@ -162,7 +171,10 @@ describe("setupMqttDeviceManager", () => {
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
     const handleMessage = mockInitializeMqttClient.mock.calls[0][1];
-    await handleMessage("jema2mqtt/entity99/set", StatusMessage.ACTIVE);
+    await handleMessage(
+      "jema2mqtt/test-device-id/entity99/set",
+      StatusMessage.ACTIVE,
+    );
 
     expect(mockSendControl).not.toHaveBeenCalled();
   });
@@ -225,7 +237,7 @@ describe("setupMqttDeviceManager", () => {
     monitorListener(true);
 
     expect(mockPublish).toHaveBeenCalledWith(
-      "jema2mqtt/entity1/state",
+      "jema2mqtt/test-device-id/entity1/state",
       StatusMessage.ACTIVE,
       { retain: true },
     );

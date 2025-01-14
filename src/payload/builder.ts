@@ -19,9 +19,9 @@ export function buildEntity(
   const baseMessage = {
     unique_id: `jema2mqtt_${deviceId}_${entity.id}`,
     name: entity.name,
-    command_topic: getTopic(entity, TopicType.COMMAND),
-    state_topic: getTopic(entity, TopicType.STATE),
-    availability_topic: getTopic(entity, TopicType.AVAILABILITY),
+    command_topic: getTopic(deviceId, entity, TopicType.COMMAND),
+    state_topic: getTopic(deviceId, entity, TopicType.STATE),
+    availability_topic: getTopic(deviceId, entity, TopicType.AVAILABILITY),
     optimistic: false,
     qos: env.ENTITY_QOS,
     retain: false,
