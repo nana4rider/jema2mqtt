@@ -62,8 +62,8 @@ export default async function requestJemaAccess(
         try {
           await port.unexport();
           logger.info(`[JEMA] GPIO(${gpio}) successfully unexported.`);
-        } catch (err) {
-          logger.error(err, `[JEMA] Failed to unexport GPIO(${gpio}):`);
+        } catch (error) {
+          logger.error(`[JEMA] Failed to unexport GPIO(${gpio}):`, error);
         }
       }
     },

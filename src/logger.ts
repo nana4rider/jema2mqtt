@@ -1,17 +1,25 @@
 import env from "@/env";
-import pino from "pino";
+import { createLogger, format, transports } from "winston";
 
-export const loggerOptions = {
+const logger = createLogger({
   level: env.LOG_LEVEL,
-  transport: {
-    target: "pino-pretty",
-    options: {
-      colorize: true,
-      translateTime: "yyyy-mm-dd HH:MM:ss.l",
-      ignore: "pid,hostname",
-    },
-  },
-};
-const logger = pino(loggerOptions);
+  format: format.combine(
+    format.errors({ stack: true }),
+    format.colorize(),
+    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" }),
+    format.printf(({ timestamp, level, message, stack }) => {
+      let log = `[${timestamp as string}] [${level}]: ${message as string}`;
+      if (typeof stack === "string") {
+        log = `${log}\n${stack}`;
+      }
+      return log;
+    }),
+  ),
+  transports: [
+    new transports.Console({
+      stderrLevels: ["warn", "error"],
+    }),
+  ],
+});
 
 export default logger;

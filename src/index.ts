@@ -49,6 +49,6 @@ async function main() {
 try {
   await main();
 } catch (err) {
-  logger.error(err, "main() error:");
+  logger.error("main() error:", err);
   process.exit(1);
 }

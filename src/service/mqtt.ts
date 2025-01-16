@@ -30,11 +30,11 @@ export default async function initializeMqttClient(
       const result = handleMessage(topic, payload.toString());
       if (result instanceof Promise) {
         result.catch((err) => {
-          logger.error(err, "[MQTT] message error:");
+          logger.error("[MQTT] message error:", err);
         });
       }
     } catch (err) {
-      logger.error(err, "[MQTT] message error:");
+      logger.error("[MQTT] message error:", err);
     }
   });
 
@@ -49,7 +49,7 @@ export default async function initializeMqttClient(
   let isMqttTaskRunning = true;
   const mqttTask = (async () => {
     while (isMqttTaskRunning) {
-      logger.trace(`[MQTT] taskQueue: ${taskQueue.length}`);
+      logger.silly(`[MQTT] taskQueue: ${taskQueue.length}`);
       const task = taskQueue.shift();
       if (task) {
         await task();
