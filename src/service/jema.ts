@@ -31,7 +31,9 @@ export default async function requestJemaAccess(
 
   await monitorPort.export("in");
 
-  logger.info(`[JEMA] initialized`, { controlGpio, monitorGpio });
+  logger.info(
+    `[JEMA] initialized control=${controlGpio}, monitor=${monitorGpio}`,
+  );
 
   return {
     sendControl: async () => {
