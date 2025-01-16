@@ -3,7 +3,7 @@ import logger from "@/logger";
 import fastify from "fastify";
 
 export default async function initializeHttpServer() {
-  const server = fastify();
+  const server = fastify(/*{ logger: loggerOptions }*/);
 
   server.get("/health", () => ({
     status: "ok",

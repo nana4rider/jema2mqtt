@@ -4,7 +4,7 @@
     {
       "label": "Docker Build and Run",
       "type": "shell",
-      "command": "docker build -t jema2mqtt -f Dockerfile.dev . && docker run --rm -it -p 9229:9229 -v $(pwd)/fake_gpio:/app/fake_gpio: jema2mqtt",
+      "command": "docker build -t jema2mqtt -f Dockerfile.dev . && docker run --rm -it -p 9229:9229 -p 3000:3000 -v $(pwd)/fake_gpio:/app/fake_gpio: jema2mqtt",
       "problemMatcher": [],
       "isBackground": true
     }
