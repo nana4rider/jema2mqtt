@@ -49,11 +49,13 @@ Raspberry Pi Zero(またはZero2)に下記の回路を取り付けることで�
 ### Production
 
 ```sh
-node dist/index.mjs
+npm install
+npm run build
+node dist/index.js
 ```
 
 > [!TIP]  
-> `dist/index.mjs`だけあれば動作するので、Raspberry PiにはNode.jsのインストールをした上でこのファイルのみ配置してください。  
+> ビルド済みの[index.mjs](https://github.com/nana4rider/jema2mqtt/releases/)だけあれば動作するので、Raspberry PiにはNode.jsのインストールをした上でこのファイルのみ配置してください。  
 > Raspberry Pi Zeroは[Unofficial Builds](https://unofficial-builds.nodejs.org/download/release/v20.18.1/)の`node-v20.18.1-linux-armv6l.tar.gz`をご利用ください。
 
 ### Development
