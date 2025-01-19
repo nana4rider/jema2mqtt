@@ -15,7 +15,7 @@ export default async function setupMqttDeviceManager(
   entities: Entity[],
   jemas: Map<string, JemaAccess>,
 ) {
-  const origin = await buildOrigin();
+  const origin = buildOrigin();
   const device = buildDevice(deviceId);
 
   // 受信して状態を変更

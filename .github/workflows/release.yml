@@ -39,6 +39,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      - name: Push build files
+        run: |
+          npm run build
+          git add dist/
+          git commit -m "[skip ci] update build files"
+          git push origin main
+
       - name: Add Tag
         run: |
           git tag "v${{ needs.get-version.outputs.current }}"

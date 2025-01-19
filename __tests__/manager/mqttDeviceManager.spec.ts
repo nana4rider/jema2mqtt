@@ -80,7 +80,7 @@ describe("setupMqttDeviceManager", () => {
       ],
     ]);
 
-    mockBuildOrigin.mockResolvedValue({ origin: "test-origin" });
+    mockBuildOrigin.mockReturnValue({ origin: "test-origin" });
     mockBuildDevice.mockReturnValue({ device: "test-device" });
     mockBuildEntity.mockReturnValue({
       unique_id: "id",
@@ -192,7 +192,7 @@ describe("setupMqttDeviceManager", () => {
       ],
     ]);
 
-    mockBuildOrigin.mockResolvedValue({ origin: "test-origin" });
+    mockBuildOrigin.mockReturnValue({ origin: "test-origin" });
     mockBuildDevice.mockReturnValue({ device: "test-device" });
     mockBuildEntity.mockReturnValue({
       unique_id: "id",

@@ -3,7 +3,7 @@ import alias from "esbuild-plugin-alias";
 
 await build({
   entryPoints: ["src/index.ts"],
-  outfile: "dist/index.js",
+  outfile: "dist/index.mjs",
   bundle: true,
   minify: true,
   format: "esm",

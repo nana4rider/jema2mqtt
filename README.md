@@ -8,6 +8,8 @@
 
 JEM1427(HA端子、JEM-A端子)をGPIOに接続し、MQTT、Home Assistantで操作するためのアプリケーションです。
 
+Raspberry Pi Zero(またはZero2)に下記の回路を取り付けることで動作します。
+
 ## 回路図
 
 !["Circuit Diagram"](images/circuit-diagram.png)
@@ -47,13 +49,12 @@ JEM1427(HA端子、JEM-A端子)をGPIOに接続し、MQTT、Home Assistantで操
 ### Production
 
 ```sh
-npm install
-npm run build
-node dist/index
+node dist/index.mjs
 ```
 
-> [!TIP]
-> package.jsonと dist/index.jsだけあれば動くので、ローカル等別環境でビルドして配置することをおすすめします。
+> [!TIP]  
+> `dist/index.mjs`だけあれば動作するので、Raspberry PiにはNode.jsのインストールをした上でこのファイルのみ配置してください。  
+> Raspberry Pi Zeroは[Unofficial Builds](https://unofficial-builds.nodejs.org/download/release/v20.18.1/)の`node-v20.18.1-linux-armv6l.tar.gz`をご利用ください。
 
 ### Development
 
