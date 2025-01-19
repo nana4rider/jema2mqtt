@@ -54,7 +54,7 @@ jobs:
 
       - name: Compress the build artifact
         run: |
-          tar -czvf index.mjs.tar.gz -C dist index.js
+          gzip -c dist/index.js > index.mjs.gz
 
       - name: Add Tag
         run: |
@@ -62,7 +62,7 @@ jobs:
           git push origin "v${{ needs.get-version.outputs.current }}"
 
       - name: Create Release to GitHub
-        run: gh release create "v${{ needs.get-version.outputs.current }}" index.mjs.tar.gz --generate-notes
+        run: gh release create "v${{ needs.get-version.outputs.current }}" index.mjs.gz --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
