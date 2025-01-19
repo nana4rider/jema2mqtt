@@ -45,11 +45,14 @@ jobs:
         with:
           node-version: "22.x"
 
-      - name: Push build files
+      - name: Build files
         run: |
           npm ci
           npm run build
           git add dist/
+
+      - name: Commit and Push files
+        run: |
           git config user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
           git commit -m "[skip ci] update build files"
