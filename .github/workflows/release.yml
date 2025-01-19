@@ -54,7 +54,8 @@ jobs:
 
       - name: Compress the build artifact
         run: |
-          gzip -c dist/index.js > index.mjs.gz
+          mv dist/index.js dist/index.mjs
+          gzip -c dist/index.mjs > index.mjs.gz
 
       - name: Add Tag
         run: |
