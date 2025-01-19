@@ -25,8 +25,11 @@ JEM1427(HA端子、JEM-A端子)をGPIOに接続し、MQTT、Home Assistantで操
 
 ## 使い方
 
-```sh
-cat config.json
+必要な環境変数については[こちら](https://github.com/nana4rider/jema2mqtt/blob/main/src/env.ts)をご確認ください。
+
+`config.json` に機器情報を設定
+
+```json
 {
   "deviceId": "string",
   "entities": [
@@ -39,12 +42,22 @@ cat config.json
     }
   ]
 }
+```
 
+### Production
+
+[!TIP]
+package.jsonと dist/index.jsだけあれば動くので、ローカル等別環境でビルドして配置することをおすすめします。
+
+```sh
 npm install
 npm run build
-
-export MQTT_BROKER="mqtt://localhost"
-export MQTT_USERNAME="username"
-export MQTT_PASSWORD="password"
 node dist/index
+```
+
+### Development
+
+```sh
+npm install
+npm run dev
 ```
