@@ -46,14 +46,14 @@ JEM1427(HA端子、JEM-A端子)をGPIOに接続し、MQTT、Home Assistantで操
 
 ### Production
 
-[!TIP]
-package.jsonと dist/index.jsだけあれば動くので、ローカル等別環境でビルドして配置することをおすすめします。
-
 ```sh
 npm install
 npm run build
 node dist/index
 ```
+
+> [!TIP]
+> package.jsonと dist/index.jsだけあれば動くので、ローカル等別環境でビルドして配置することをおすすめします。
 
 ### Development
 
