@@ -51,16 +51,10 @@ jobs:
         run: |
           npm ci
           npm run build
-          git add dist/
 
-      - name: Commit and Push files
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compress the build artifact
         run: |
-          git config user.name "$(git --no-pager log --format=format:'%an' -n 1)"
-          git config user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
-          git commit -m "[skip ci] update build files"
-          git push origin main
+          tar -czvf index.mjs.tar.gz -C dist index.js
 
       - name: Add Tag
         run: |
@@ -68,7 +62,7 @@ jobs:
           git push origin "v${{ needs.get-version.outputs.current }}"
 
       - name: Create Release to GitHub
-        run: gh release create "v${{ needs.get-version.outputs.current }}" --generate-notes
+        run: gh release create "v${{ needs.get-version.outputs.current }}" index.mjs.tar.gz --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -3,9 +3,8 @@ import alias from "esbuild-plugin-alias";
 
 await build({
   entryPoints: ["src/index.ts"],
-  outfile: "dist/index.mjs",
+  outfile: "dist/index.js",
   bundle: true,
-  minify: true,
   format: "esm",
   platform: "node",
   tsconfig: "./tsconfig.json",
