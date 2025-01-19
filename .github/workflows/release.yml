@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   test:
@@ -32,10 +33,10 @@ jobs:
           echo "previous: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-  release:
+  build-and-release:
     runs-on: ubuntu-latest
     needs: get-version
-    if: ${{ needs.get-version.outputs.current != needs.get-version.outputs.previous }}
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.get-version.outputs.current != needs.get-version.outputs.previous }}
     steps:
       - uses: actions/checkout@v4
 
@@ -49,6 +50,8 @@ jobs:
           npm ci
           npm run build
           git add dist/
+          git config user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
           git commit -m "[skip ci] update build files"
           git push origin main
 
@@ -69,8 +72,7 @@ jobs:
 
   deploy-webhook:
     runs-on: ubuntu-latest
-    needs: get-version
-    if: ${{ needs.get-version.outputs.current != needs.get-version.outputs.previous }}
+    needs: build-and-release
     steps:
       - env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
