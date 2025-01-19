@@ -46,6 +46,7 @@ jobs:
 
       - name: Push build files
         run: |
+          npm ci
           npm run build
           git add dist/
           git commit -m "[skip ci] update build files"
