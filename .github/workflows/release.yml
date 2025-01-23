@@ -65,7 +65,7 @@ jobs:
           git push origin "v${{ needs.prepare-release.outputs.current_version }}"
 
       - name: Create Release to GitHub
-        run: gh release create "v${{ needs.prepare-release.outputs.current_version }}" --generate-notes
+        run: gh release create "v${{ needs.prepare-release.outputs.current_version }}" index.mjs.gz --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
