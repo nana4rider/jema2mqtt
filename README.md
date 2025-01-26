@@ -16,10 +16,11 @@ Raspberry Pi Zero(またはZero2)に下記の回路を取り付けることで�
 
 ## 必要な部品
 
-- [XHコネクタ ベース付ポスト サイド型 4P](https://akizukidenshi.com/catalog/g/g112842/) \* 1
-- [フォトカプラ TLP785(BLランク)](https://akizukidenshi.com/catalog/g/g109846/) \* 2
-- [カーボン抵抗(炭素皮膜抵抗) 1/4W10kΩ](https://akizukidenshi.com/catalog/g/g125103/) \* 1
-- [L型ピンソケット 1x6](https://akizukidenshi.com/catalog/g/g109862/) \* 1
+- [XHコネクタ ベース付ポスト サイド型 4P](https://akizukidenshi.com/catalog/g/g112842/) x1
+- [フォトカプラ TLP785(BLランク)](https://akizukidenshi.com/catalog/g/g109846/) x2
+- [カーボン抵抗(炭素皮膜抵抗) 1/4W10kΩ](https://akizukidenshi.com/catalog/g/g125103/) x1
+- [L型ピンソケット 1x6](https://akizukidenshi.com/catalog/g/g109862/) x1
+- [ユニバーサル基板](https://akizukidenshi.com/catalog/g/g112188/) x1
 
 ## 実装サンプル
 
@@ -27,7 +28,7 @@ Raspberry Pi Zero(またはZero2)に下記の回路を取り付けることで�
 
 ## 使い方
 
-必要な環境変数については[こちら](https://github.com/nana4rider/jema2mqtt/blob/main/src/env.ts)をご確認ください。
+### 設定ファイルの作成
 
 `config.json` に機器情報を設定
 
@@ -46,21 +47,17 @@ Raspberry Pi Zero(またはZero2)に下記の回路を取り付けることで�
 }
 ```
 
-### Production
+### インストールと起動
 
 ```sh
 npm install
 npm run build
-node dist/index.js
+node --env-file=.env index.mjs
 ```
 
 > [!TIP]  
-> ビルド済みの[index.mjs](https://github.com/nana4rider/jema2mqtt/releases/)だけあれば動作するので、Raspberry PiにはNode.jsのインストールをした上でこのファイルのみ配置してください。  
+> 必要な環境変数については[こちら](src/env.ts)をご確認ください。
+>
+> ビルド済みの[index.mjs](https://github.com/nana4rider/jema2mqtt/releases/)だけあれば動作するので、Raspberry PiにはNode.jsのインストールをした上でこのファイルのみ配置してください。
+>
 > Raspberry Pi Zeroは[Unofficial Builds](https://unofficial-builds.nodejs.org/download/release/v20.18.1/)の`node-v20.18.1-linux-armv6l.tar.gz`をご利用ください。
-
-### Development
-
-```sh
-npm install
-npm run dev
-```
