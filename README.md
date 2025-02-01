@@ -58,6 +58,6 @@ node --env-file=.env index.mjs
 > [!TIP]  
 > 必要な環境変数については[こちら](src/env.ts)をご確認ください。
 >
-> ビルド済みの[index.mjs](https://github.com/nana4rider/jema2mqtt/releases/)だけあれば動作するので、Raspberry PiにはNode.jsのインストールをした上でこのファイルのみ配置してください。
+> ビルド済みの[`index.mjs`](https://github.com/nana4rider/jema2mqtt/releases/)、[`config.json`](./config.json.example)、[`.env`](./.env.example)のみで動作しますので、Raspberry Piに配置してください。
 >
-> Raspberry Pi Zeroは[Unofficial Builds](https://unofficial-builds.nodejs.org/download/release/v20.18.1/)の`node-v20.18.1-linux-armv6l.tar.gz`をご利用ください。
+> Node.jsのインストール、サービス登録のためのスクリプトを[こちら](./installer)に用意しています。
