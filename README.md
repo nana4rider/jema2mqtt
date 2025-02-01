@@ -58,6 +58,6 @@ node --env-file=.env index.mjs
 > [!TIP]  
 > 必要な環境変数については[こちら](src/env.ts)をご確認ください。
 >
-> ビルド済みの[`index.mjs`](https://github.com/nana4rider/jema2mqtt/releases/)、[`config.json`](./config.json.example)、[`.env`](./.env.example)のみで動作します。(npm installは不要)
+> ビルド済みの[`index.mjs`](https://github.com/nana4rider/jema2mqtt/releases/)、[`config.json`](./config.json.example)、[`.env`](./.env.example)のみで動作します。(`npm install`不要)
 >
 > Node.jsのインストール、サービス登録のためのスクリプトを[こちら](./installer)に用意しています。
