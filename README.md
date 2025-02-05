@@ -60,4 +60,4 @@ node --env-file=.env index.mjs
 >
 > ビルド済みの[`index.mjs`](https://github.com/nana4rider/jema2mqtt/releases/)、[`config.json`](./config.json.example)、[`.env`](./.env.example)のみで動作します。(`npm install`不要)
 >
-> Node.jsのインストール、サービス登録のためのスクリプトを[こちら](./installer)に用意しています。
+> サービス登録のためのスクリプトを[こちら](./installer)に用意しています。
