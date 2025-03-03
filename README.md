@@ -8,7 +8,7 @@
 
 JEM1427(HA端子、JEM-A端子)をGPIOに接続し、MQTT、Home Assistantで操作するためのアプリケーションです。
 
-Raspberry Pi Zero(またはZero2)に下記の回路を取り付けることで動作します。
+Raspberry Pi Zero 2 Wに下記の回路を取り付けることで動作します。
 
 ## 回路図
 
@@ -55,7 +55,8 @@ npm run build
 node --env-file=.env index.mjs
 ```
 
-> [!TIP]  
+> [!TIP]
+>
 > 必要な環境変数については[こちら](src/env.ts)をご確認ください。
 >
 > ビルド済みの[`index.mjs`](https://github.com/nana4rider/jema2mqtt/releases/)、[`config.json`](./config.json.example)、[`.env`](./.env.example)のみで動作します。(`npm install`不要)
