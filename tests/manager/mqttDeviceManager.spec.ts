@@ -10,50 +10,43 @@ import {
 } from "@/payload/builder";
 import { JemaAccess } from "@/service/jema";
 import initializeMqttClient from "@/service/mqtt";
+import { Mock } from "vitest";
 
-jest.mock("@/payload/builder", () => {
-  const actual = jest.requireActual<typeof builder>("@/payload/builder");
+vi.mock("@/payload/builder", async () => {
+  const actual = await vi.importActual<typeof builder>("@/payload/builder");
   return {
     ...actual,
-    buildDevice: jest.fn(),
-    buildEntity: jest.fn(),
-    buildOrigin: jest.fn(),
+    buildDevice: vi.fn(),
+    buildEntity: vi.fn(),
+    buildOrigin: vi.fn(),
   };
 });
 
-const mockBuildOrigin = buildOrigin as jest.Mock<
-  ReturnType<typeof buildOrigin>,
-  Parameters<typeof buildOrigin>
->;
-const mockBuildDevice = buildDevice as jest.Mock<
-  ReturnType<typeof buildDevice>,
-  Parameters<typeof buildDevice>
->;
-const mockBuildEntity = buildEntity as jest.Mock<
-  ReturnType<typeof buildEntity>,
-  Parameters<typeof buildEntity>
->;
+const mockBuildOrigin = buildOrigin as Mock<typeof buildOrigin>;
+const mockBuildDevice = buildDevice as Mock<typeof buildDevice>;
+const mockBuildEntity = buildEntity as Mock<typeof buildEntity>;
 
-jest.mock("@/service/mqtt", () => jest.fn());
+vi.mock("@/service/mqtt", () => ({
+  default: vi.fn(),
+}));
 
-const mockPublish = jest.fn();
-const mockSetMonitorListener = jest.fn<
-  ReturnType<JemaAccess["setMonitorListener"]>,
-  Parameters<JemaAccess["setMonitorListener"]>
->();
-const mockGetMonitor = jest.fn();
-const mockSendControl = jest.fn();
-const mockInitializeMqttClient = initializeMqttClient as jest.Mock<
-  ReturnType<typeof initializeMqttClient>,
-  Parameters<typeof initializeMqttClient>
+const mockPublish = vi.fn();
+const mockSetMonitorListener = vi.fn<JemaAccess["setMonitorListener"]>();
+const mockGetMonitor = vi.fn();
+const mockSendControl = vi.fn();
+const mockInitializeMqttClient = initializeMqttClient as Mock<
+  typeof initializeMqttClient
 >;
 
 beforeEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 
   mockInitializeMqttClient.mockResolvedValue({
     publish: mockPublish,
-  } as unknown as ReturnType<typeof setupMqttDeviceManager>);
+    taskQueueSize: 0,
+    addSubscribe: vi.fn(),
+    close: vi.fn(),
+  });
 });
 
 describe("setupMqttDeviceManager", () => {
