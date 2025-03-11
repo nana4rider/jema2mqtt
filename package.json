@@ -1,6 +1,6 @@
 {
   "name": "jema2mqtt",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "main": "dist/index.js",
   "type": "module",
   "homepage": "https://github.com/nana4rider/jema2mqtt",
