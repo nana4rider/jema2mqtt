@@ -1,9 +1,9 @@
 import requestJemaAccess from "@/service/jema";
 
 const controlGpio = 10;
-const mockControlExport = jest.fn();
-const mockControlWrite = jest.fn();
-const mockControlUnexport = jest.fn();
+const mockControlExport = vi.fn();
+const mockControlWrite = vi.fn();
+const mockControlUnexport = vi.fn();
 const mockControlPort = {
   export: mockControlExport,
   write: mockControlWrite,
@@ -11,9 +11,9 @@ const mockControlPort = {
 };
 
 const monitorGpio = 20;
-const mockMonitorExport = jest.fn();
-const mockMonitorRead = jest.fn();
-const mockMonitorUnexport = jest.fn();
+const mockMonitorExport = vi.fn();
+const mockMonitorRead = vi.fn();
+const mockMonitorUnexport = vi.fn();
 const mockMonitorPort = {
   export: mockMonitorExport,
   read: mockMonitorRead,
@@ -21,7 +21,7 @@ const mockMonitorPort = {
   onchange: (_: { value: number }) => {},
 };
 
-jest.mock("node-web-gpio", () => {
+vi.mock("node-web-gpio", () => {
   return {
     requestGPIOAccess: () => {
       return Promise.resolve({
@@ -42,8 +42,8 @@ jest.mock("node-web-gpio", () => {
 });
 
 beforeEach(() => {
-  jest.resetAllMocks();
-  jest.clearAllMocks();
+  vi.resetAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("initialize", () => {
@@ -102,7 +102,7 @@ describe("setMonitorListener", () => {
       controlGpio,
       monitorGpio,
     );
-    const mockListener = jest.fn();
+    const mockListener = vi.fn();
     setMonitorListener(mockListener);
     mockMonitorPort.onchange({ value: 1 });
     mockMonitorPort.onchange({ value: 0 });
