@@ -26,12 +26,11 @@ vi.mock("@/service/mqtt", () => ({
 }));
 
 const mockPublish = vi.fn();
-const mockInitializeMqttClient = vi.mocked(initializeMqttClient);
 
 beforeEach(() => {
   vi.resetAllMocks();
 
-  mockInitializeMqttClient.mockResolvedValue({
+  vi.mocked(initializeMqttClient).mockResolvedValue({
     publish: mockPublish,
     taskQueueSize: 0,
     addSubscribe: vi.fn(),
@@ -68,7 +67,7 @@ describe("setupMqttDeviceManager", () => {
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
-    expect(mockInitializeMqttClient).toHaveBeenCalledWith(
+    expect(initializeMqttClient).toHaveBeenCalledWith(
       [
         "jema2mqtt/test-device-id/entity1/set",
         "jema2mqtt/test-device-id/entity2/set",
@@ -88,7 +87,7 @@ describe("setupMqttDeviceManager", () => {
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
-    const handleMessage = mockInitializeMqttClient.mock.calls[0][1];
+    const handleMessage = vi.mocked(initializeMqttClient).mock.calls[0][1];
     await handleMessage(
       "jema2mqtt/test-device-id/entity1/set",
       StatusMessage.ACTIVE,
@@ -108,7 +107,7 @@ describe("setupMqttDeviceManager", () => {
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
-    const handleMessage = mockInitializeMqttClient.mock.calls[0][1];
+    const handleMessage = vi.mocked(initializeMqttClient).mock.calls[0][1];
     await handleMessage(
       "jema2mqtt/test-device-id/entity1/set",
       StatusMessage.INACTIVE,
@@ -127,7 +126,7 @@ describe("setupMqttDeviceManager", () => {
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
-    const handleMessage = mockInitializeMqttClient.mock.calls[0][1];
+    const handleMessage = vi.mocked(initializeMqttClient).mock.calls[0][1];
     await handleMessage(
       "jema2mqtt/test-device-id/entity99/set",
       StatusMessage.ACTIVE,
