@@ -10,7 +10,6 @@ import {
 } from "@/payload/builder";
 import { JemaAccess } from "@/service/jema";
 import initializeMqttClient from "@/service/mqtt";
-import { Mock } from "vitest";
 
 vi.mock("@/payload/builder", async () => {
   const actual = await vi.importActual<typeof builder>("@/payload/builder");
@@ -22,21 +21,12 @@ vi.mock("@/payload/builder", async () => {
   };
 });
 
-const mockBuildOrigin = buildOrigin as Mock<typeof buildOrigin>;
-const mockBuildDevice = buildDevice as Mock<typeof buildDevice>;
-const mockBuildEntity = buildEntity as Mock<typeof buildEntity>;
-
 vi.mock("@/service/mqtt", () => ({
   default: vi.fn(),
 }));
 
 const mockPublish = vi.fn();
-const mockSetMonitorListener = vi.fn<JemaAccess["setMonitorListener"]>();
-const mockGetMonitor = vi.fn();
-const mockSendControl = vi.fn();
-const mockInitializeMqttClient = initializeMqttClient as Mock<
-  typeof initializeMqttClient
->;
+const mockInitializeMqttClient = vi.mocked(initializeMqttClient);
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -49,6 +39,15 @@ beforeEach(() => {
   });
 });
 
+function getMockJemaAccess(): JemaAccess {
+  return {
+    getMonitor: vi.fn().mockResolvedValue(false),
+    setMonitorListener: vi.fn(),
+    sendControl: vi.fn(),
+    close: vi.fn(),
+  };
+}
+
 describe("setupMqttDeviceManager", () => {
   test("初期化で各エンティティのトピックを購読する", async () => {
     const mockEntities = [
@@ -57,28 +56,15 @@ describe("setupMqttDeviceManager", () => {
     ] as Entity[];
 
     const mockJemas = new Map<string, JemaAccess>([
-      [
-        "entity1",
-        {
-          getMonitor: mockGetMonitor,
-          setMonitorListener: mockSetMonitorListener,
-        } as unknown as JemaAccess,
-      ],
-      [
-        "entity2",
-        {
-          getMonitor: mockGetMonitor,
-          setMonitorListener: mockSetMonitorListener,
-        } as unknown as JemaAccess,
-      ],
+      ["entity1", getMockJemaAccess()],
+      ["entity2", getMockJemaAccess()],
     ]);
 
-    mockBuildOrigin.mockReturnValue({ origin: "test-origin" });
-    mockBuildDevice.mockReturnValue({ device: "test-device" });
-    mockBuildEntity.mockReturnValue({
+    vi.mocked(buildOrigin).mockReturnValue({ origin: "test-origin" });
+    vi.mocked(buildDevice).mockReturnValue({ device: "test-device" });
+    vi.mocked(buildEntity).mockReturnValue({
       unique_id: "id",
     });
-    mockGetMonitor.mockResolvedValue(false);
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
@@ -94,18 +80,11 @@ describe("setupMqttDeviceManager", () => {
   test("モニタ信号がfalseのときactive命令を受信すると制御信号を送る", async () => {
     const mockEntities = [{ id: "entity1", domain: "lock" }] as Entity[];
 
+    const mockJemaAccess = getMockJemaAccess();
+    vi.mocked(mockJemaAccess.getMonitor).mockResolvedValue(false);
     const mockJemas = new Map<string, JemaAccess>([
-      [
-        "entity1",
-        {
-          getMonitor: mockGetMonitor,
-          sendControl: mockSendControl,
-          setMonitorListener: mockSetMonitorListener,
-        } as unknown as JemaAccess,
-      ],
+      ["entity1", mockJemaAccess],
     ]);
-
-    mockGetMonitor.mockResolvedValue(false);
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
@@ -115,24 +94,17 @@ describe("setupMqttDeviceManager", () => {
       StatusMessage.ACTIVE,
     );
 
-    expect(mockSendControl).toHaveBeenCalledTimes(1);
+    expect(mockJemaAccess.sendControl).toHaveBeenCalledTimes(1);
   });
 
   test("モニタ信号がtrueのときinactive命令を受信すると制御信号を送る", async () => {
     const mockEntities = [{ id: "entity1", domain: "lock" }] as Entity[];
 
+    const mockJemaAccess = getMockJemaAccess();
+    vi.mocked(mockJemaAccess.getMonitor).mockResolvedValue(true);
     const mockJemas = new Map<string, JemaAccess>([
-      [
-        "entity1",
-        {
-          getMonitor: mockGetMonitor,
-          sendControl: mockSendControl,
-          setMonitorListener: mockSetMonitorListener,
-        } as unknown as JemaAccess,
-      ],
+      ["entity1", mockJemaAccess],
     ]);
-
-    mockGetMonitor.mockResolvedValue(true);
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
@@ -142,24 +114,16 @@ describe("setupMqttDeviceManager", () => {
       StatusMessage.INACTIVE,
     );
 
-    expect(mockSendControl).toHaveBeenCalledTimes(1);
+    expect(mockJemaAccess.sendControl).toHaveBeenCalledTimes(1);
   });
 
   test("受信したメッセージが未登録IDの場合何もしない", async () => {
     const mockEntities = [{ id: "entity1", domain: "lock" }] as Entity[];
 
+    const mockJemaAccess = getMockJemaAccess();
     const mockJemas = new Map<string, JemaAccess>([
-      [
-        "entity1",
-        {
-          getMonitor: mockGetMonitor,
-          sendControl: mockSendControl,
-          setMonitorListener: mockSetMonitorListener,
-        } as unknown as JemaAccess,
-      ],
+      ["entity1", mockJemaAccess],
     ]);
-
-    mockGetMonitor.mockResolvedValue(false);
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
@@ -169,29 +133,22 @@ describe("setupMqttDeviceManager", () => {
       StatusMessage.ACTIVE,
     );
 
-    expect(mockSendControl).not.toHaveBeenCalled();
+    expect(mockJemaAccess.sendControl).not.toHaveBeenCalled();
   });
 
   test("デバイス検出のメッセージを送信", async () => {
     const mockEntities = [{ id: "entity1", domain: "lock" }] as Entity[];
 
+    const mockJemaAccess = getMockJemaAccess();
     const mockJemas = new Map<string, JemaAccess>([
-      [
-        "entity1",
-        {
-          getMonitor: mockGetMonitor,
-          setMonitorListener: mockSetMonitorListener,
-        } as unknown as JemaAccess,
-      ],
+      ["entity1", mockJemaAccess],
     ]);
 
-    mockBuildOrigin.mockReturnValue({ origin: "test-origin" });
-    mockBuildDevice.mockReturnValue({ device: "test-device" });
-    mockBuildEntity.mockReturnValue({
+    vi.mocked(buildOrigin).mockReturnValue({ origin: "test-origin" });
+    vi.mocked(buildDevice).mockReturnValue({ device: "test-device" });
+    vi.mocked(buildEntity).mockReturnValue({
       unique_id: "id",
     });
-
-    mockGetMonitor.mockResolvedValue(false);
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
@@ -211,21 +168,15 @@ describe("setupMqttDeviceManager", () => {
       { id: "entity1", domain: "lock" } as Entity,
     ];
 
+    const mockJemaAccess = getMockJemaAccess();
     const mockJemas = new Map<string, JemaAccess>([
-      [
-        "entity1",
-        {
-          getMonitor: mockGetMonitor,
-          setMonitorListener: mockSetMonitorListener,
-        } as unknown as JemaAccess,
-      ],
+      ["entity1", mockJemaAccess],
     ]);
-
-    mockGetMonitor.mockResolvedValue(false);
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
-    const monitorListener = mockSetMonitorListener.mock.calls[0][0];
+    const monitorListener = vi.mocked(mockJemaAccess.setMonitorListener).mock
+      .calls[0][0];
 
     monitorListener(true);
 
