@@ -1,14 +1,14 @@
-import { Entity } from "@/entity";
+import type { Entity } from "@/entity";
 import env from "@/env";
 import setupMqttDeviceManager from "@/manager/mqttDeviceManager";
-import * as builder from "@/payload/builder";
+import type * as builder from "@/payload/builder";
 import {
   buildDevice,
   buildEntity,
   buildOrigin,
   StatusMessage,
 } from "@/payload/builder";
-import { JemaAccess } from "@/service/jema";
+import type { JemaAccess } from "@/service/jema";
 import initializeMqttClient from "@/service/mqtt";
 
 vi.mock("@/payload/builder", async () => {

@@ -1,4 +1,4 @@
-import { Entity } from "@/entity";
+import type { Entity } from "@/entity";
 import env from "@/env";
 import {
   buildDevice,
@@ -7,7 +7,7 @@ import {
   StatusMessage,
 } from "@/payload/builder";
 import { getTopic, TopicType } from "@/payload/topic";
-import { JemaAccess } from "@/service/jema";
+import type { JemaAccess } from "@/service/jema";
 import initializeMqttClient from "@/service/mqtt";
 
 export default async function setupMqttDeviceManager(
