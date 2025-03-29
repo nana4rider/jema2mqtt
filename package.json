@@ -15,7 +15,10 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.ts": "npm run lint"
+    "*.ts": [
+      "eslint --max-warnings 0",
+      "prettier --check"
+    ]
   },
   "author": "nana4rider",
   "license": "ISC",
