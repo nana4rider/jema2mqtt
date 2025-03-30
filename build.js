@@ -1,3 +1,4 @@
+import tsconfigPathsPlugin from "@esbuild-plugins/tsconfig-paths";
 import { build } from "esbuild";
 
 const tsconfig = "tsconfig.json";
