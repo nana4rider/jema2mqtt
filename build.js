@@ -1,5 +1,7 @@
 import { build } from "esbuild";
 
+const tsconfig = "tsconfig.json";
+
 await build({
   entryPoints: ["src/index.ts"],
   outfile: "dist/index.js",
