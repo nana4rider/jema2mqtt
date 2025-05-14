@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-    echo "Usage: $0 <service_name>"
-    exit 1
+  echo "Usage: $0 <service_name>"
+  exit 1
 fi
 
 SERVICE_NAME="$1"
@@ -22,7 +22,7 @@ Description=$SERVICE_NAME Node.js Service
 After=network.target
 
 [Service]
-ExecStart=$NODE_BIN --env-file=.env $ENTRY_POINT
+ExecStart=$NODE_BIN --env-file=.env --no-deprecation $ENTRY_POINT
 WorkingDirectory=$APP_DIR
 Restart=always
 User=$USER
