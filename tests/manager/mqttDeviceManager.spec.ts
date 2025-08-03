@@ -33,7 +33,6 @@ beforeEach(() => {
   vi.mocked(initializeMqttClient).mockResolvedValue({
     publish: mockPublish,
     taskQueueSize: 0,
-    addSubscribe: vi.fn(),
     close: vi.fn(),
   });
 });
