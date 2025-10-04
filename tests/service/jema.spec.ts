@@ -50,8 +50,8 @@ describe("initialize", () => {
   test("制御信号GPIO、モニタ信号GPIOの初期化が正常終了", async () => {
     await requestJemaAccess(controlGpio, monitorGpio);
 
-    expect(mockControlExport).toHaveBeenCalledWith("out");
-    expect(mockMonitorExport).toHaveBeenCalledWith("in");
+    expect(mockControlExport).toHaveBeenCalledExactlyOnceWith("out");
+    expect(mockMonitorExport).toHaveBeenCalledExactlyOnceWith("in");
   });
 
   test("制御信号GPIOの初期化に失敗", async () => {

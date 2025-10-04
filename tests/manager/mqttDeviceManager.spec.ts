@@ -66,7 +66,7 @@ describe("setupMqttDeviceManager", () => {
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
-    expect(initializeMqttClient).toHaveBeenCalledWith(
+    expect(initializeMqttClient).toHaveBeenCalledExactlyOnceWith(
       [
         "jema2mqtt/test-device-id/entity1/set",
         "jema2mqtt/test-device-id/entity2/set",
@@ -150,7 +150,7 @@ describe("setupMqttDeviceManager", () => {
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
-    expect(mockPublish).toHaveBeenCalledWith(
+    expect(mockPublish).toHaveBeenLastCalledWith(
       `${env.HA_DISCOVERY_PREFIX}/lock/id/config`,
       JSON.stringify({
         unique_id: "id",
@@ -178,7 +178,7 @@ describe("setupMqttDeviceManager", () => {
 
     monitorListener(true);
 
-    expect(mockPublish).toHaveBeenCalledWith(
+    expect(mockPublish).toHaveBeenLastCalledWith(
       "jema2mqtt/test-device-id/entity1/state",
       StatusMessage.ACTIVE,
       { retain: true },
