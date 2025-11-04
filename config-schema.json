@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "properties": {
+    "deviceId": { "type": "string" },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "domain": { "$ref": "#/definitions/EntityDomain" },
+          "controlGpio": { "type": "number" },
+          "monitorGpio": { "type": "number" }
+        },
+        "required": ["controlGpio", "domain", "id", "monitorGpio", "name"]
+      }
+    }
+  },
+  "required": ["deviceId", "entities"],
+  "definitions": {
+    "EntityDomain": { "enum": ["cover", "lock", "switch"], "type": "string" }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
