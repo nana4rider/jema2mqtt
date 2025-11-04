@@ -6,7 +6,7 @@ import initializeHttpServer from "@/service/http";
 import requestJemaAccess from "@/service/jema";
 import fs from "fs/promises";
 
-type Config = {
+export type DeviceConfig = {
   deviceId: string;
   entities: Entity[];
 };
@@ -16,7 +16,7 @@ async function main() {
 
   const { deviceId, entities } = JSON.parse(
     await fs.readFile("./config.json", "utf-8"),
-  ) as Config;
+  ) as DeviceConfig;
   const jemas = new Map(
     await Promise.all(
       entities.map(async ({ id: uniqueId, controlGpio, monitorGpio }) => {
