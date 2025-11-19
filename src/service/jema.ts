@@ -1,71 +1,54 @@
 import logger from "@/logger";
-import { requestGPIOAccess } from "node-web-gpio";
-import { setTimeout as sleep } from "timers/promises";
+import * as gpio from "@/service/gpio";
+import { setTimeout } from "timers/promises";
 
 export type JemaAccess = {
   sendControl: () => Promise<void>;
   getMonitor: () => Promise<boolean>;
-  setMonitorListener: (listener: (value: boolean) => void) => void;
-  close: () => Promise<void>;
+  setMonitorListener: (listener: (value: boolean) => void) => Promise<void>;
 };
 
+const MONITOR_INTERVAL = 100;
 const CONTROL_INTERVAL = 250;
 
-export default async function requestJemaAccess(
+export default function requestJemaAccess(
   controlGpio: number,
   monitorGpio: number,
-): Promise<JemaAccess> {
-  const gpioAccess = await requestGPIOAccess();
-
-  const controlPort = gpioAccess.ports.get(controlGpio);
-  if (!controlPort) {
-    throw new Error(`GPIO(${controlGpio}) initialization failed.`);
-  }
-
-  await controlPort.export("out");
-
-  const monitorPort = gpioAccess.ports.get(monitorGpio);
-  if (!monitorPort) {
-    throw new Error(`GPIO(${monitorGpio}) initialization failed.`);
-  }
-
-  await monitorPort.export("in");
-
+): JemaAccess {
   logger.info(
-    `[JEMA] initialized control=${controlGpio}, monitor=${monitorGpio}`,
+    `[JEMA] GPIO settings: control=${controlGpio}, monitor=${monitorGpio}`,
   );
+
+  const getMonitor = async () => {
+    const value = await gpio.getValue(monitorGpio);
+    logger.debug(`[JEMA] getMonitor: ${value}`);
+    return value === 1;
+  };
 
   return {
     sendControl: async () => {
       logger.debug("[JEMA] sendControl");
-      await controlPort.write(1);
-      await sleep(CONTROL_INTERVAL);
-      await controlPort.write(0);
+      await gpio.setValue(controlGpio, 1, {
+        toggle: `${CONTROL_INTERVAL}ms,0`,
+      });
     },
 
-    getMonitor: async () => {
-      const value = await monitorPort.read();
-      logger.debug(`[JEMA] getMonitor: ${value}`);
-      return value === 1;
-    },
+    getMonitor,
 
-    setMonitorListener: (listener: (value: boolean) => void) => {
-      monitorPort.onchange = ({ value }) => {
-        logger.debug(`[JEMA] onchange: ${value}`);
-        return listener(value === 1);
-      };
-    },
+    setMonitorListener: async (listener: (value: boolean) => void) => {
+      let currentMonitor = await getMonitor();
 
-    close: async () => {
-      for (const port of [controlPort, monitorPort]) {
-        const { portNumber: gpio } = port;
-        try {
-          await port.unexport();
-          logger.info(`[JEMA] GPIO(${gpio}) successfully unexported.`);
-        } catch (error) {
-          logger.error(`[JEMA] Failed to unexport GPIO(${gpio}):`, error);
+      void (async () => {
+        while (true) {
+          const monitor = await getMonitor();
+          if (monitor !== currentMonitor) {
+            logger.debug(`[JEMA] onchange: ${monitor}`);
+            listener(monitor);
+            currentMonitor = monitor;
+          }
+          await setTimeout(MONITOR_INTERVAL);
         }
-      }
+      })();
     },
   };
 }

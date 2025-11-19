@@ -3,6 +3,7 @@ import logger from "@/logger";
 import { setupAvailability } from "@/manager/availabilityManager";
 import setupMqttDeviceManager from "@/manager/mqttDeviceManager";
 import initializeHttpServer from "@/service/http";
+import type { JemaAccess } from "@/service/jema";
 import requestJemaAccess from "@/service/jema";
 import fs from "fs/promises";
 
@@ -17,14 +18,10 @@ async function main() {
   const { deviceId, entities } = JSON.parse(
     await fs.readFile("./config.json", "utf-8"),
   ) as DeviceConfig;
-  const jemas = new Map(
-    await Promise.all(
-      entities.map(async ({ id: uniqueId, controlGpio, monitorGpio }) => {
-        const jema = await requestJemaAccess(controlGpio, monitorGpio);
-        return [uniqueId, jema] as const;
-      }),
-    ),
-  );
+  const jemas = new Map<string, JemaAccess>();
+  for (const { id, controlGpio, monitorGpio } of entities) {
+    jemas.set(id, requestJemaAccess(controlGpio, monitorGpio));
+  }
   const mqtt = await setupMqttDeviceManager(deviceId, entities, jemas);
   const http = await initializeHttpServer();
   const availability = setupAvailability(deviceId, entities, mqtt);
@@ -34,7 +31,6 @@ async function main() {
     availability.close();
     await mqtt.close(true);
     await http.close();
-    await Promise.all(Array.from(jemas.values()).map((jema) => jema.close()));
     process.exit(0);
   };
 
