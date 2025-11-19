@@ -1,4 +1,4 @@
-import * as gpio from "@/service/gpio";
+import { getGPIOValue, setGPIOValue } from "@/service/gpio";
 import * as child_process from "child_process";
 
 vi.mock("child_process", async () => {
@@ -30,7 +30,7 @@ describe("read", () => {
       return {} as child_process.ChildProcess;
     });
 
-    const value = await gpio.getValue(99);
+    const value = await getGPIOValue(99);
 
     vi.mocked(child_process.exec);
 
@@ -46,7 +46,7 @@ describe("read", () => {
       return {} as child_process.ChildProcess;
     });
 
-    const actual = gpio.getValue(99);
+    const actual = getGPIOValue(99);
 
     await expect(actual).rejects.toThrowError();
   });
@@ -58,7 +58,7 @@ describe("read", () => {
       return {} as child_process.ChildProcess;
     });
 
-    await gpio.setValue(98, 1, { toggle: "250ms,0" });
+    await setGPIOValue(98, 1, { toggle: "250ms,0" });
 
     vi.mocked(child_process.exec);
 

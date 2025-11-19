@@ -1,4 +1,4 @@
-import * as gpio from "@/service/gpio";
+import { getGPIOValue, setGPIOValue } from "@/service/gpio";
 import requestJemaAccess from "@/service/jema";
 import { setTimeout } from "timers/promises";
 
@@ -7,8 +7,8 @@ const monitorGpio = 20;
 
 vi.mock("@/service/gpio", () => {
   return {
-    getValue: vi.fn(),
-    setValue: vi.fn(),
+    getGPIOValue: vi.fn(),
+    setGPIOValue: vi.fn(),
   };
 });
 
@@ -22,7 +22,7 @@ describe("sendControl", () => {
     const { sendControl } = requestJemaAccess(controlGpio, monitorGpio);
     await sendControl();
 
-    expect(gpio.setValue).toHaveBeenCalledWith(controlGpio, 1, {
+    expect(setGPIOValue).toHaveBeenCalledWith(controlGpio, 1, {
       toggle: "250ms,0",
     });
   });
@@ -30,7 +30,7 @@ describe("sendControl", () => {
 
 describe("getMonitor", () => {
   test("モニタ信号の値が1のときはtrueを返す", async () => {
-    vi.mocked(gpio.getValue).mockResolvedValue(1);
+    vi.mocked(getGPIOValue).mockResolvedValue(1);
 
     const { getMonitor } = requestJemaAccess(controlGpio, monitorGpio);
 
@@ -38,7 +38,7 @@ describe("getMonitor", () => {
   });
 
   test("モニタ信号の値が0のときはfalseを返す", async () => {
-    vi.mocked(gpio.getValue).mockResolvedValue(0);
+    vi.mocked(getGPIOValue).mockResolvedValue(0);
 
     const { getMonitor } = requestJemaAccess(controlGpio, monitorGpio);
 
@@ -50,7 +50,7 @@ describe("setMonitorListener", () => {
   test("イベントが発火される", async () => {
     const { setMonitorListener } = requestJemaAccess(controlGpio, monitorGpio);
 
-    const mockGpioRead = vi.mocked(gpio.getValue);
+    const mockGpioRead = vi.mocked(getGPIOValue);
     const mockListener = vi.fn();
 
     mockGpioRead.mockResolvedValue(0);
@@ -68,7 +68,7 @@ describe("setMonitorListener", () => {
   test("エラーが発生してもイベントが停止しない", async () => {
     const { setMonitorListener } = requestJemaAccess(controlGpio, monitorGpio);
 
-    const mockGpioRead = vi.mocked(gpio.getValue);
+    const mockGpioRead = vi.mocked(getGPIOValue);
     const mockListener = vi.fn();
 
     mockGpioRead.mockResolvedValue(0);

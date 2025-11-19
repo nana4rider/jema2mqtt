@@ -1,5 +1,5 @@
 import logger from "@/logger";
-import * as gpio from "@/service/gpio";
+import { GPIOValue, getGPIOValue, setGPIOValue } from "@/service/gpio";
 import { setTimeout } from "timers/promises";
 
 export type JemaAccess = {
@@ -20,15 +20,15 @@ export default function requestJemaAccess(
   );
 
   const getMonitor = async () => {
-    const value = await gpio.getValue(monitorGpio);
-    logger.debug(`[JEMA] getMonitor: ${value}`);
-    return value === 1;
+    const value = await getGPIOValue(monitorGpio);
+    logger.silly(`[JEMA] getMonitor: ${value}`);
+    return value === GPIOValue.ACTIVE;
   };
 
   return {
     sendControl: async () => {
       logger.debug("[JEMA] sendControl");
-      await gpio.setValue(controlGpio, 1, {
+      await setGPIOValue(controlGpio, GPIOValue.ACTIVE, {
         toggle: `${CONTROL_INTERVAL}ms,0`,
       });
     },
