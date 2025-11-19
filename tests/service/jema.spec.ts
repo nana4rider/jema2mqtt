@@ -64,4 +64,20 @@ describe("setMonitorListener", () => {
     expect(mockListener).toHaveBeenNthCalledWith(1, true);
     expect(mockListener).toHaveBeenNthCalledWith(2, false);
   });
+
+  test("エラーが発生してもイベントが停止しない", async () => {
+    const { setMonitorListener } = requestJemaAccess(controlGpio, monitorGpio);
+
+    const mockGpioRead = vi.mocked(gpio.getValue);
+    const mockListener = vi.fn();
+
+    mockGpioRead.mockResolvedValue(0);
+    await setMonitorListener(mockListener);
+    mockGpioRead.mockRejectedValue("read error");
+    await setTimeout(150);
+    mockGpioRead.mockResolvedValue(1);
+    await setTimeout(150);
+
+    expect(mockListener).toHaveBeenCalledWith(true);
+  });
 });

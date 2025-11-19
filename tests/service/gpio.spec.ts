@@ -39,6 +39,18 @@ describe("read", () => {
     expect(mockExec.mock.calls[0][0]).toBe("gpioget --numeric --chip 0 99");
   });
 
+  test("gpiogetコマンドが0|1以外の値を返したとき例外をスローする", async () => {
+    const mockExec = vi.mocked(child_process.exec as ExecCallbackOnly);
+    mockExec.mockImplementation((_command, callback) => {
+      callback(null, { stdout: "\n", stderr: "" });
+      return {} as child_process.ChildProcess;
+    });
+
+    const actual = gpio.getValue(99);
+
+    await expect(actual).rejects.toThrowError();
+  });
+
   test("gpiosetコマンドが正しく設定される", async () => {
     const mockExec = vi.mocked(child_process.exec as ExecCallbackOnly);
     mockExec.mockImplementation((_command, callback) => {

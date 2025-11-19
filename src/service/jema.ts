@@ -40,11 +40,15 @@ export default function requestJemaAccess(
 
       void (async () => {
         while (true) {
-          const monitor = await getMonitor();
-          if (monitor !== currentMonitor) {
-            logger.debug(`[JEMA] onchange: ${monitor}`);
-            listener(monitor);
-            currentMonitor = monitor;
+          try {
+            const monitor = await getMonitor();
+            if (monitor !== currentMonitor) {
+              logger.debug(`[JEMA] onchange: ${monitor}`);
+              listener(monitor);
+              currentMonitor = monitor;
+            }
+          } catch (err) {
+            logger.error("[JEMA] monitor error:", err);
           }
           await setTimeout(MONITOR_INTERVAL);
         }
