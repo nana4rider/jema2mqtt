@@ -1,43 +1,14 @@
+import * as gpio from "@/service/gpio";
 import requestJemaAccess from "@/service/jema";
+import { setTimeout } from "timers/promises";
 
 const controlGpio = 10;
-const mockControlExport = vi.fn();
-const mockControlWrite = vi.fn();
-const mockControlUnexport = vi.fn();
-const mockControlPort = {
-  export: mockControlExport,
-  write: mockControlWrite,
-  unexport: mockControlUnexport,
-};
-
 const monitorGpio = 20;
-const mockMonitorExport = vi.fn();
-const mockMonitorRead = vi.fn();
-const mockMonitorUnexport = vi.fn();
-const mockMonitorPort = {
-  export: mockMonitorExport,
-  read: mockMonitorRead,
-  unexport: mockMonitorUnexport,
-  onchange: (_: { value: number }) => {},
-};
 
-vi.mock("node-web-gpio", () => {
+vi.mock("@/service/gpio", () => {
   return {
-    requestGPIOAccess: () => {
-      return Promise.resolve({
-        ports: {
-          get: (gpio: number) => {
-            if (gpio === controlGpio) {
-              return mockControlPort;
-            } else if (gpio === monitorGpio) {
-              return mockMonitorPort;
-            } else {
-              return undefined;
-            }
-          },
-        },
-      });
-    },
+    getValue: vi.fn(),
+    setValue: vi.fn(),
   };
 });
 
@@ -46,51 +17,30 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe("initialize", () => {
-  test("制御信号GPIO、モニタ信号GPIOの初期化が正常終了", async () => {
-    await requestJemaAccess(controlGpio, monitorGpio);
-
-    expect(mockControlExport).toHaveBeenCalledExactlyOnceWith("out");
-    expect(mockMonitorExport).toHaveBeenCalledExactlyOnceWith("in");
-  });
-
-  test("制御信号GPIOの初期化に失敗", async () => {
-    const actual = requestJemaAccess(99, monitorGpio);
-
-    await expect(actual).rejects.toThrow("GPIO(99) initialization failed.");
-  });
-
-  test("モニタ信号GPIOの初期化に失敗", async () => {
-    const actual = requestJemaAccess(controlGpio, 98);
-
-    await expect(actual).rejects.toThrow("GPIO(98) initialization failed.");
-  });
-});
-
 describe("sendControl", () => {
-  test("制御信号に1を送信した後0を送信", async () => {
-    const { sendControl } = await requestJemaAccess(controlGpio, monitorGpio);
+  test("制御信号の送信ができる", async () => {
+    const { sendControl } = requestJemaAccess(controlGpio, monitorGpio);
     await sendControl();
 
-    expect(mockControlWrite).toHaveBeenCalledTimes(2);
-    expect(mockControlWrite).toHaveBeenNthCalledWith(1, 1);
-    expect(mockControlWrite).toHaveBeenNthCalledWith(2, 0);
+    expect(gpio.setValue).toHaveBeenCalledWith(controlGpio, 1, {
+      toggle: "250ms,0",
+    });
   });
 });
 
 describe("getMonitor", () => {
   test("モニタ信号の値が1のときはtrueを返す", async () => {
-    mockMonitorRead.mockReturnValueOnce(1);
+    vi.mocked(gpio.getValue).mockResolvedValue(1);
 
-    const { getMonitor } = await requestJemaAccess(controlGpio, monitorGpio);
+    const { getMonitor } = requestJemaAccess(controlGpio, monitorGpio);
 
     await expect(getMonitor()).resolves.toBe(true);
   });
 
   test("モニタ信号の値が0のときはfalseを返す", async () => {
-    mockMonitorRead.mockReturnValueOnce(0);
+    vi.mocked(gpio.getValue).mockResolvedValue(0);
 
-    const { getMonitor } = await requestJemaAccess(controlGpio, monitorGpio);
+    const { getMonitor } = requestJemaAccess(controlGpio, monitorGpio);
 
     await expect(getMonitor()).resolves.toBe(false);
   });
@@ -98,34 +48,36 @@ describe("getMonitor", () => {
 
 describe("setMonitorListener", () => {
   test("イベントが発火される", async () => {
-    const { setMonitorListener } = await requestJemaAccess(
-      controlGpio,
-      monitorGpio,
-    );
+    const { setMonitorListener } = requestJemaAccess(controlGpio, monitorGpio);
+
+    const mockGpioRead = vi.mocked(gpio.getValue);
     const mockListener = vi.fn();
-    setMonitorListener(mockListener);
-    mockMonitorPort.onchange({ value: 1 });
-    mockMonitorPort.onchange({ value: 0 });
+
+    mockGpioRead.mockResolvedValue(0);
+    await setMonitorListener(mockListener);
+    mockGpioRead.mockResolvedValue(1);
+    await setTimeout(150);
+    mockGpioRead.mockResolvedValue(0);
+    await setTimeout(150);
+
     expect(mockListener).toHaveBeenCalledTimes(2);
     expect(mockListener).toHaveBeenNthCalledWith(1, true);
     expect(mockListener).toHaveBeenNthCalledWith(2, false);
   });
-});
 
-describe("close", () => {
-  test("制御信号、モニタ信号のunexportが呼び出される", async () => {
-    const { close } = await requestJemaAccess(controlGpio, monitorGpio);
-    await close();
-    expect(mockControlUnexport).toHaveBeenCalledTimes(1);
-    expect(mockMonitorUnexport).toHaveBeenCalledTimes(1);
-  });
+  test("エラーが発生してもイベントが停止しない", async () => {
+    const { setMonitorListener } = requestJemaAccess(controlGpio, monitorGpio);
 
-  test("失敗してもエラーを出さない", async () => {
-    mockControlUnexport.mockImplementation(() => {
-      throw new Error("unexport error");
-    });
-    const { close } = await requestJemaAccess(controlGpio, monitorGpio);
-    const actual = close();
-    await expect(actual).resolves.not.toThrow();
+    const mockGpioRead = vi.mocked(gpio.getValue);
+    const mockListener = vi.fn();
+
+    mockGpioRead.mockResolvedValue(0);
+    await setMonitorListener(mockListener);
+    mockGpioRead.mockRejectedValue("read error");
+    await setTimeout(150);
+    mockGpioRead.mockResolvedValue(1);
+    await setTimeout(150);
+
+    expect(mockListener).toHaveBeenCalledWith(true);
   });
 });

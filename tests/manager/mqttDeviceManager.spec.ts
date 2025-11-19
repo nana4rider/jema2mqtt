@@ -42,7 +42,6 @@ function getMockJemaAccess(): JemaAccess {
     getMonitor: vi.fn().mockResolvedValue(false),
     setMonitorListener: vi.fn(),
     sendControl: vi.fn(),
-    close: vi.fn(),
   };
 }
 

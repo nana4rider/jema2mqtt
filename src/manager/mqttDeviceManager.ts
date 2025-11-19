@@ -52,7 +52,7 @@ export default async function setupMqttDeviceManager(
         );
       const jema = jemas.get(entity.id)!;
       // 状態の変更を検知して送信
-      jema.setMonitorListener((value) => void publishState(value));
+      await jema.setMonitorListener((value) => void publishState(value));
       // 起動時に送信
       publishState(await jema.getMonitor());
       // Home Assistantでデバイスを検出

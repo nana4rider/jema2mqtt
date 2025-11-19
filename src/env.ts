@@ -36,6 +36,7 @@ const env = cleanEnv(process.env, {
     desc: "オンライン状態を送信する間隔",
     default: 10000,
   }),
+  GPIO_CHIP: num({ desc: "GPIOチップ", default: 0 }),
 });
 
 export default env;
