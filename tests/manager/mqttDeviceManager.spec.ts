@@ -39,9 +39,9 @@ beforeEach(() => {
 
 function getMockJemaAccess(): JemaAccess {
   return {
-    getMonitor: vi.fn().mockResolvedValue(false),
-    setMonitorListener: vi.fn(),
-    sendControl: vi.fn(),
+    readMonitor: vi.fn().mockResolvedValue(false),
+    onMonitorChange: vi.fn(),
+    sendControlPulse: vi.fn(),
   };
 }
 
@@ -78,7 +78,7 @@ describe("setupMqttDeviceManager", () => {
     const mockEntities = [{ id: "entity1", domain: "lock" }] as Entity[];
 
     const mockJemaAccess = getMockJemaAccess();
-    vi.mocked(mockJemaAccess.getMonitor).mockResolvedValue(false);
+    vi.mocked(mockJemaAccess.readMonitor).mockResolvedValue(false);
     const mockJemas = new Map<string, JemaAccess>([
       ["entity1", mockJemaAccess],
     ]);
@@ -91,14 +91,14 @@ describe("setupMqttDeviceManager", () => {
       StatusMessage.ACTIVE,
     );
 
-    expect(mockJemaAccess.sendControl).toHaveBeenCalledTimes(1);
+    expect(mockJemaAccess.sendControlPulse).toHaveBeenCalledTimes(1);
   });
 
   test("モニタ信号がfalseのときinactive命令を受信しても制御信号を送らない", async () => {
     const mockEntities = [{ id: "entity1", domain: "lock" }] as Entity[];
 
     const mockJemaAccess = getMockJemaAccess();
-    vi.mocked(mockJemaAccess.getMonitor).mockResolvedValue(false);
+    vi.mocked(mockJemaAccess.readMonitor).mockResolvedValue(false);
     const mockJemas = new Map<string, JemaAccess>([
       ["entity1", mockJemaAccess],
     ]);
@@ -111,14 +111,14 @@ describe("setupMqttDeviceManager", () => {
       StatusMessage.INACTIVE,
     );
 
-    expect(mockJemaAccess.sendControl).not.toHaveBeenCalled();
+    expect(mockJemaAccess.sendControlPulse).not.toHaveBeenCalled();
   });
 
   test("モニタ信号がtrueのときinactive命令を受信すると制御信号を送る", async () => {
     const mockEntities = [{ id: "entity1", domain: "lock" }] as Entity[];
 
     const mockJemaAccess = getMockJemaAccess();
-    vi.mocked(mockJemaAccess.getMonitor).mockResolvedValue(true);
+    vi.mocked(mockJemaAccess.readMonitor).mockResolvedValue(true);
     const mockJemas = new Map<string, JemaAccess>([
       ["entity1", mockJemaAccess],
     ]);
@@ -131,14 +131,14 @@ describe("setupMqttDeviceManager", () => {
       StatusMessage.INACTIVE,
     );
 
-    expect(mockJemaAccess.sendControl).toHaveBeenCalledTimes(1);
+    expect(mockJemaAccess.sendControlPulse).toHaveBeenCalledTimes(1);
   });
 
   test("モニタ信号がtrueのときactive命令を受信しても制御信号を送らない", async () => {
     const mockEntities = [{ id: "entity1", domain: "lock" }] as Entity[];
 
     const mockJemaAccess = getMockJemaAccess();
-    vi.mocked(mockJemaAccess.getMonitor).mockResolvedValue(true);
+    vi.mocked(mockJemaAccess.readMonitor).mockResolvedValue(true);
     const mockJemas = new Map<string, JemaAccess>([
       ["entity1", mockJemaAccess],
     ]);
@@ -151,7 +151,7 @@ describe("setupMqttDeviceManager", () => {
       StatusMessage.ACTIVE,
     );
 
-    expect(mockJemaAccess.sendControl).not.toHaveBeenCalled();
+    expect(mockJemaAccess.sendControlPulse).not.toHaveBeenCalled();
   });
 
   test("受信したメッセージが未登録IDの場合何もしない", async () => {
@@ -170,7 +170,7 @@ describe("setupMqttDeviceManager", () => {
       StatusMessage.ACTIVE,
     );
 
-    expect(mockJemaAccess.sendControl).not.toHaveBeenCalled();
+    expect(mockJemaAccess.sendControlPulse).not.toHaveBeenCalled();
   });
 
   test("デバイス検出のメッセージを送信", async () => {
@@ -212,7 +212,7 @@ describe("setupMqttDeviceManager", () => {
 
     await setupMqttDeviceManager("test-device-id", mockEntities, mockJemas);
 
-    const monitorListener = vi.mocked(mockJemaAccess.setMonitorListener).mock
+    const monitorListener = vi.mocked(mockJemaAccess.onMonitorChange).mock
       .calls[0][0];
 
     monitorListener(true);
