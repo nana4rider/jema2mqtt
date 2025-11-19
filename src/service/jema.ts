@@ -3,15 +3,15 @@ import { GPIOValue, getGPIOValue, setGPIOValue } from "@/service/gpio";
 import { setTimeout } from "timers/promises";
 
 export type JemaAccess = {
-  sendControl: () => Promise<void>;
-  getMonitor: () => Promise<boolean>;
-  setMonitorListener: (listener: (value: boolean) => void) => Promise<void>;
+  sendControlPulse: () => Promise<void>;
+  readMonitor: () => Promise<boolean>;
+  onMonitorChange: (listener: (value: boolean) => void) => void;
 };
 
 const MONITOR_INTERVAL = 100;
 const CONTROL_INTERVAL = 250;
 
-export default function requestJemaAccess(
+export default function createJemaAccess(
   controlGpio: number,
   monitorGpio: number,
 ): JemaAccess {
@@ -19,29 +19,29 @@ export default function requestJemaAccess(
     `[JEMA] GPIO settings: control=${controlGpio}, monitor=${monitorGpio}`,
   );
 
-  const getMonitor = async () => {
+  const readMonitor = async () => {
     const value = await getGPIOValue(monitorGpio);
-    logger.silly(`[JEMA] getMonitor: ${value}`);
+    logger.silly(`[JEMA] readMonitor: ${value}`);
     return value === GPIOValue.ACTIVE;
   };
 
   return {
-    sendControl: async () => {
-      logger.debug("[JEMA] sendControl");
+    sendControlPulse: async () => {
+      logger.debug("[JEMA] sendControlPulse");
       await setGPIOValue(controlGpio, GPIOValue.ACTIVE, {
         toggle: `${CONTROL_INTERVAL}ms,0`,
       });
     },
 
-    getMonitor,
+    readMonitor,
 
-    setMonitorListener: async (listener: (value: boolean) => void) => {
-      let currentMonitor = await getMonitor();
-
+    onMonitorChange: (listener: (value: boolean) => void) => {
       void (async () => {
+        let currentMonitor = await readMonitor();
+
         while (true) {
           try {
-            const monitor = await getMonitor();
+            const monitor = await readMonitor();
             if (monitor !== currentMonitor) {
               logger.debug(`[JEMA] onchange: ${monitor}`);
               listener(monitor);

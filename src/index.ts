@@ -4,7 +4,7 @@ import { setupAvailability } from "@/manager/availabilityManager";
 import setupMqttDeviceManager from "@/manager/mqttDeviceManager";
 import initializeHttpServer from "@/service/http";
 import type { JemaAccess } from "@/service/jema";
-import requestJemaAccess from "@/service/jema";
+import createJemaAccess from "@/service/jema";
 import fs from "fs/promises";
 
 export type DeviceConfig = {
@@ -20,7 +20,7 @@ async function main() {
   ) as DeviceConfig;
   const jemas = new Map<string, JemaAccess>();
   for (const { id, controlGpio, monitorGpio } of entities) {
-    jemas.set(id, requestJemaAccess(controlGpio, monitorGpio));
+    jemas.set(id, createJemaAccess(controlGpio, monitorGpio));
   }
   const mqtt = await setupMqttDeviceManager(deviceId, entities, jemas);
   const http = await initializeHttpServer();

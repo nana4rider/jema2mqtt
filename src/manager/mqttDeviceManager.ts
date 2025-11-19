@@ -26,12 +26,12 @@ export default async function setupMqttDeviceManager(
     if (!entity) return;
     const jema = jemas.get(entity.id)!;
 
-    const monitor = await jema.getMonitor();
+    const monitor = await jema.readMonitor();
     if (
       (message === StatusMessage.ACTIVE && !monitor) ||
       (message === StatusMessage.INACTIVE && monitor)
     ) {
-      await jema.sendControl();
+      await jema.sendControlPulse();
     }
   };
 
@@ -52,9 +52,9 @@ export default async function setupMqttDeviceManager(
         );
       const jema = jemas.get(entity.id)!;
       // 状態の変更を検知して送信
-      await jema.setMonitorListener((value) => void publishState(value));
+      jema.onMonitorChange((value) => void publishState(value));
       // 起動時に送信
-      publishState(await jema.getMonitor());
+      publishState(await jema.readMonitor());
       // Home Assistantでデバイスを検出
       const discoveryMessage = {
         ...buildEntity(deviceId, entity),
