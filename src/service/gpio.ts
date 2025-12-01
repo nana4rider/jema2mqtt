@@ -8,12 +8,15 @@ export const GPIOValue = {
 } as const;
 type GPIOValue = (typeof GPIOValue)[keyof typeof GPIOValue];
 
-const exec = promisify(child_process.exec);
+const execFileAsync = promisify(child_process.execFile);
 
 export async function getGPIOValue(gpio: number): Promise<GPIOValue> {
-  const { stdout } = await exec(
-    `gpioget --numeric --chip ${env.GPIO_CHIP} ${gpio}`,
-  );
+  const { stdout } = await execFileAsync("gpioget", [
+    "--numeric",
+    "--chip",
+    env.GPIO_CHIP.toString(),
+    gpio.toString(),
+  ]);
   const value = parseInt(stdout.trim(), 10);
   if (value !== GPIOValue.INACTIVE && value !== GPIOValue.ACTIVE) {
     throw new Error(`[GPIO] Invalid value: ${stdout}`);
@@ -26,10 +29,14 @@ export async function setGPIOValue(
   value: GPIOValue,
   options: Record<string, string>,
 ): Promise<void> {
-  const optionString = Object.entries(options)
-    .map(([key, value]) => `--${key} ${value}`)
-    .join(" ");
-  await exec(
-    `gpioset --chip ${env.GPIO_CHIP} ${optionString} ${gpio}=${value}`,
-  );
+  const optionsArray = Object.entries(options).flatMap(([key, value]) => [
+    `--${key}`,
+    value,
+  ]);
+  await execFileAsync("gpioset", [
+    "--chip",
+    env.GPIO_CHIP.toString(),
+    ...optionsArray,
+    `${gpio}=${value}`,
+  ]);
 }
