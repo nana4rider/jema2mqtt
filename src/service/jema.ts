@@ -21,7 +21,7 @@ export default function createJemaAccess(
 
   const readMonitor = async () => {
     const value = await getGPIOValue(monitorGpio);
-    logger.silly(`[JEMA] readMonitor: ${value}`);
+    logger.trace(`[JEMA] readMonitor: ${value}`);
     return value === GPIOValue.ACTIVE;
   };
 
@@ -48,7 +48,7 @@ export default function createJemaAccess(
               currentMonitor = monitor;
             }
           } catch (err) {
-            logger.error("[JEMA] monitor error:", err);
+            logger.error({ msg: "[JEMA] monitor error", err });
           }
           await setTimeout(MONITOR_INTERVAL);
         }
