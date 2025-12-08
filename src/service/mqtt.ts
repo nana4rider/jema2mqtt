@@ -26,6 +26,10 @@ export default async function initializeMqttClient(
   });
   const taskQueue: (() => Promise<void>)[] = [];
 
+  client.on("error", (error) => {
+    logger.error(`[MQTT] error: ${error.message}`);
+  });
+
   client.on("message", (topic, payload) => {
     logger.debug(`[MQTT] receive topic: ${topic}`);
     try {
