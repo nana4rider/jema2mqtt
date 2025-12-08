@@ -12,7 +12,7 @@ Raspberry Pi Zero 2 Wに下記の回路を取り付けることで動作しま�
 
 ## 回路図
 
-!["Circuit Diagram"](images/circuit-diagram.png)
+!["Circuit Diagram"](images/circuit-diagram.svg)
 
 ## 必要な部品
 
