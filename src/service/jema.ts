@@ -20,9 +20,9 @@ export default function createJemaAccess(
   );
 
   const readMonitor = async () => {
-    const value = await getGPIOValue(monitorGpio);
+    const value = await getGPIOValue(monitorGpio, { bias: "pull-up" });
     logger.trace(`[JEMA] readMonitor: ${value}`);
-    return value === GPIOValue.ACTIVE;
+    return value === GPIOValue.INACTIVE;
   };
 
   return {

@@ -9,12 +9,18 @@ export const GPIOValue = {
 type GPIOValue = (typeof GPIOValue)[keyof typeof GPIOValue];
 
 const execFileAsync = promisify(child_process.execFile);
+const getOptionsArray = (options: Record<string, string>) =>
+  Object.entries(options).flatMap(([key, value]) => [`--${key}`, value]);
 
-export async function getGPIOValue(gpio: number): Promise<GPIOValue> {
+export async function getGPIOValue(
+  gpio: number,
+  options: Record<string, string> = {},
+): Promise<GPIOValue> {
   const { stdout } = await execFileAsync("gpioget", [
     "--numeric",
     "--chip",
     env.GPIO_CHIP.toString(),
+    ...getOptionsArray(options),
     gpio.toString(),
   ]);
   const value = parseInt(stdout.trim(), 10);
@@ -29,14 +35,10 @@ export async function setGPIOValue(
   value: GPIOValue,
   options: Record<string, string>,
 ): Promise<void> {
-  const optionsArray = Object.entries(options).flatMap(([key, value]) => [
-    `--${key}`,
-    value,
-  ]);
   await execFileAsync("gpioset", [
     "--chip",
     env.GPIO_CHIP.toString(),
-    ...optionsArray,
+    ...getOptionsArray(options),
     `${gpio}=${value}`,
   ]);
 }

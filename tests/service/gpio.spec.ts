@@ -33,7 +33,7 @@ describe("read", () => {
       return {} as child_process.ChildProcess;
     });
 
-    const value = await getGPIOValue(99);
+    const value = await getGPIOValue(99, { bias: "pull-up" });
 
     expect(value).toBe(1);
     expect(mockExecFile).toHaveBeenCalledTimes(1);
@@ -42,6 +42,8 @@ describe("read", () => {
       "--numeric",
       "--chip",
       "0",
+      "--bias",
+      "pull-up",
       "99",
     ]);
   });

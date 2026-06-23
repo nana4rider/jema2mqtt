@@ -31,20 +31,20 @@ describe("sendControlPulse", () => {
 });
 
 describe("readMonitor", () => {
-  test("モニタ信号の値が1のときはtrueを返す", async () => {
+  test("モニタ信号の値が1のときはfalseを返す", async () => {
     vi.mocked(getGPIOValue).mockResolvedValue(1);
 
     const { readMonitor } = createJemaAccess(controlGpio, monitorGpio);
 
-    await expect(readMonitor()).resolves.toBe(true);
+    await expect(readMonitor()).resolves.toBe(false);
   });
 
-  test("モニタ信号の値が0のときはfalseを返す", async () => {
+  test("モニタ信号の値が0のときはtrueを返す", async () => {
     vi.mocked(getGPIOValue).mockResolvedValue(0);
 
     const { readMonitor } = createJemaAccess(controlGpio, monitorGpio);
 
-    await expect(readMonitor()).resolves.toBe(false);
+    await expect(readMonitor()).resolves.toBe(true);
   });
 });
 
@@ -55,11 +55,11 @@ describe("onMonitorChange", () => {
     const mockGpioRead = vi.mocked(getGPIOValue);
     const mockListener = vi.fn();
 
-    mockGpioRead.mockResolvedValue(0);
-    onMonitorChange(mockListener);
     mockGpioRead.mockResolvedValue(1);
-    await setTimeout(150);
+    onMonitorChange(mockListener);
     mockGpioRead.mockResolvedValue(0);
+    await setTimeout(150);
+    mockGpioRead.mockResolvedValue(1);
     await setTimeout(150);
 
     expect(mockListener).toHaveBeenCalledTimes(2);
@@ -73,11 +73,11 @@ describe("onMonitorChange", () => {
     const mockGpioRead = vi.mocked(getGPIOValue);
     const mockListener = vi.fn();
 
-    mockGpioRead.mockResolvedValue(0);
+    mockGpioRead.mockResolvedValue(1);
     onMonitorChange(mockListener);
     mockGpioRead.mockRejectedValue("read error");
     await setTimeout(150);
-    mockGpioRead.mockResolvedValue(1);
+    mockGpioRead.mockResolvedValue(0);
     await setTimeout(150);
 
     expect(mockListener).toHaveBeenCalledWith(true);
